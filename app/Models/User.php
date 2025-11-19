@@ -38,6 +38,15 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
+
+    protected $table = 'users';
+    protected $primaryKey = 'id_usuario';
+
+    public function institution()
+    {
+        return $this->belongsTo(Institution::class, 'id_institucion');
+    }
+    
     protected function casts(): array
     {
         return [
