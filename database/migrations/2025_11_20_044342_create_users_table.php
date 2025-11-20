@@ -6,17 +6,20 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up()
     {
-        Schema::create('clients', function (Blueprint $table) {
-            $table->id('id_cliente');
+        Schema::create('users', function (Blueprint $table) {
+            $table->id('id_usuario');
             $table->unsignedBigInteger('id_institucion');
-            $table->string('nombre', 255);
-            $table->string('telefono', 50);
-            $table->string('correo', 255);
-            $table->string('direccion', 500)->nullable();
+            $table->string('rol', 50);
+            $table->string('usuario', 100)->unique();
+            $table->string('contrasena_hash', 255);
             $table->timestamps();
 
+            // Foreign key explícita
             $table->foreign('id_institucion')
                 ->references('id_institucion')
                 ->on('institutions')
@@ -24,8 +27,11 @@ return new class extends Migration
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('clients');
+        Schema::dropIfExists('users');
     }
 };

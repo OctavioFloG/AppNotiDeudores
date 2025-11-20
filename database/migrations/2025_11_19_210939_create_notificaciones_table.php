@@ -6,25 +6,24 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up()
     {
         Schema::create('notificaciones', function (Blueprint $table) {
             $table->id('id_notificacion');
-            $table->foreignId('id_cuenta')->constrained('cuentas_por_cobrar')->onDelete('cascade');
+            $table->unsignedBigInteger('id_cuenta');
             $table->text('mensaje');
             $table->dateTime('fecha_envio');
             $table->string('estado_envio', 50);
             $table->boolean('leido')->default(false);
             $table->timestamps();
+
+            $table->foreign('id_cuenta')
+                ->references('id_cuenta')
+                ->on('cuentas_por_cobrar')
+                ->onDelete('cascade');
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('notificaciones');
