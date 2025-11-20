@@ -173,6 +173,19 @@ class CuentaPorCobrarController extends Controller
                 ->where('id_institucion', $request->user()->id_institucion)
                 ->firstOrFail();
 
+            // Si intenta cambiar a "Pagada", validar que no esté ya pagada
+            if ($request->has('estado') && $request->estado === 'Pagada' && $cuenta->estado === 'Pagada') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta deuda ya fue pagada anteriormente. No se puede cambiar su estado.',
+                    'data' => [
+                        'id' => $cuenta->id_cuenta,
+                        'estado' => $cuenta->estado,
+                        'fecha_pago' => $cuenta->fecha_pago,
+                    ]
+                ], 400);
+            }
+
             $cuenta->update($request->only('monto', 'fecha_emision', 'fecha_vencimiento', 'descripcion', 'estado', 'fecha_pago'));
 
             return response()->json([
