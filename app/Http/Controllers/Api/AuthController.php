@@ -12,7 +12,6 @@ class AuthController extends Controller
 {
     /**
      * Login de institución (usuario admin)
-     * US2: Iniciar sesión como institución
      */
     public function login(Request $request)
     {
