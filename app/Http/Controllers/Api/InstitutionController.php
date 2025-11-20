@@ -8,35 +8,54 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Validator;
 
 class InstitutionController extends Controller
 {
-    /**
-     * Registrar una nueva institución y crear usuario admin automáticamente
-     */
     public function store(Request $request)
     {
-        // Validación según criterios de aceptación de US1
-        $validated = $request->validate([
+        // Validación manual con mensaje personalizado
+        $validator = Validator::make($request->all(), [
             'nombre'    => 'required|string|max:255',
             'direccion' => 'required|string|max:500',
             'telefono'  => 'required|string|max:50',
-            'correo'    => 'required|email|unique:institutions,correo',
+            'correo'    => 'required|email',
         ], [
-            'correo.unique' => 'El correo ya está registrado en el sistema.',
-            'correo.email'  => 'El correo no es válido.',
             'correo.required' => 'El correo es requerido.',
+            'correo.email'    => 'El correo no es válido.',
         ]);
 
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
+        }
+
+        // Validar correo duplicado manualmente
+        $correoExiste = Institution::where('correo', $request->correo)->exists();
+        if ($correoExiste) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error de validación',
+                'errors' => [
+                    'correo' => ['El correo ya está registrado en el sistema.']
+                ]
+            ], 422);
+        }
+
         try {
-            // 1. Crear la institución
+            $validated = $validator->validated();
+            
+            // 1. Crear institución
             $institution = Institution::create($validated);
 
-            // 2. Generar usuario y contraseña automáticamente
+            // 2. Generar usuario y contraseña
             $username = strtolower(Str::slug($institution->nombre) . '-' . rand(1000, 9999));
             $password_raw = Str::random(12);
 
-            // 3. Crear usuario administrador asociado
+            // 3. Crear usuario admin
             $user = User::create([
                 'id_institucion'  => $institution->id_institucion,
                 'rol'             => 'administrador',
@@ -44,7 +63,6 @@ class InstitutionController extends Controller
                 'contrasena_hash' => Hash::make($password_raw),
             ]);
 
-            // 4. Retornar respuesta exitosa
             return response()->json([
                 'success' => true,
                 'message' => 'Institución registrada exitosamente',
