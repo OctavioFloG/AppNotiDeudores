@@ -87,7 +87,7 @@ class CuentaPorCobrarController extends Controller
     }
 
     /**
-     * Obtener todas las cuentas por cobrar de la institución
+     * Obtener todas las cuentas por cobrar de la institución con filtros
      */
     public function index(Request $request)
     {
@@ -104,7 +104,31 @@ class CuentaPorCobrarController extends Controller
                 $query->where('estado', $request->estado);
             }
 
-            // Ordenar por fecha de vencimiento
+            // Filtrar por fecha de emisión (rango)
+            if ($request->fecha_emision_desde) {
+                $query->whereDate('fecha_emision', '>=', $request->fecha_emision_desde);
+            }
+            if ($request->fecha_emision_hasta) {
+                $query->whereDate('fecha_emision', '<=', $request->fecha_emision_hasta);
+            }
+
+            // Filtrar por fecha de vencimiento (rango)
+            if ($request->fecha_vencimiento_desde) {
+                $query->whereDate('fecha_vencimiento', '>=', $request->fecha_vencimiento_desde);
+            }
+            if ($request->fecha_vencimiento_hasta) {
+                $query->whereDate('fecha_vencimiento', '<=', $request->fecha_vencimiento_hasta);
+            }
+
+            // Filtrar por fecha de pago (rango)
+            if ($request->fecha_pago_desde) {
+                $query->whereDate('fecha_pago', '>=', $request->fecha_pago_desde);
+            }
+            if ($request->fecha_pago_hasta) {
+                $query->whereDate('fecha_pago', '<=', $request->fecha_pago_hasta);
+            }
+
+            // Ordenar por fecha de vencimiento (más próximas primero)
             $cuentas = $query->orderBy('fecha_vencimiento', 'asc')->get();
 
             return response()->json([
