@@ -212,6 +212,20 @@ class CuentaPorCobrarController extends Controller
                 ->where('id_institucion', $request->user()->id_institucion)
                 ->firstOrFail();
 
+            // Validar que la cuenta no esté ya pagada
+            if ($cuenta->estado === 'Pagada') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta deuda ya fue pagada anteriormente',
+                    'data' => [
+                        'id' => $cuenta->id_cuenta,
+                        'estado' => $cuenta->estado,
+                        'fecha_pago' => $cuenta->fecha_pago,
+                    ]
+                ], 400);
+            }
+
+            // Registrar pago
             $cuenta->update([
                 'estado'      => 'Pagada',
                 'fecha_pago'  => $request->fecha_pago
@@ -220,7 +234,15 @@ class CuentaPorCobrarController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Pago registrado exitosamente',
-                'data' => $cuenta
+                'data' => [
+                    'id'              => $cuenta->id_cuenta,
+                    'id_cliente'      => $cuenta->id_cliente,
+                    'monto'           => $cuenta->monto,
+                    'estado'          => $cuenta->estado,
+                    'fecha_pago'      => $cuenta->fecha_pago,
+                    'fecha_emision'   => $cuenta->fecha_emision,
+                    'fecha_vencimiento' => $cuenta->fecha_vencimiento,
+                ]
             ], 200);
 
         } catch (\Exception $e) {
