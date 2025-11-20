@@ -86,18 +86,39 @@ class ClientController extends Controller
     }
 
     /**
-     * Obtener todos los clientes de la institución autenticada
+     * Obtener todos los clientes de la institución autenticada con búsqueda y paginación
      */
     public function index(Request $request)
     {
         try {
-            $clients = Client::where('id_institucion', $request->user()->id_institucion)
-                ->get();
+            $perPage = $request->per_page ?? 10; // 10 clientes más recientes por página por defecto
+            $search = $request->search ?? '';
+
+            $query = Client::where('id_institucion', $request->user()->id_institucion)->orderBy('created_at', 'asc');
+
+            // Búsqueda por nombre, teléfono o correo
+            if ($search) {
+                $query->where(function ($q) use ($search) {
+                    $q->where('nombre', 'LIKE', "%{$search}%")
+                    ->orWhere('telefono', 'LIKE', "%{$search}%")
+                    ->orWhere('correo', 'LIKE', "%{$search}%");
+                });
+            }
+
+            // Paginar resultados
+            $clients = $query->paginate($perPage);
 
             return response()->json([
                 'success' => true,
-                'data' => $clients,
-                'total' => $clients->count()
+                'data' => $clients->items(),
+                'pagination' => [
+                    'total' => $clients->total(),
+                    'per_page' => $clients->perPage(),
+                    'current_page' => $clients->currentPage(),
+                    'last_page' => $clients->lastPage(),
+                    'from' => $clients->firstItem(),
+                    'to' => $clients->lastItem(),
+                ]
             ], 200);
 
         } catch (\Exception $e) {
