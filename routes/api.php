@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
+use App\Http\Controllers\Api\CuentaPorCobrarController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas
@@ -22,4 +23,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('clients/{id}', [ClientController::class, 'show']);
     Route::put('clients/{id}', [ClientController::class, 'update']);
     Route::delete('clients/{id}', [ClientController::class, 'destroy']);
+    
+    // Cuentas por Cobrar
+    Route::post('cuentas-por-cobrar', [CuentaPorCobrarController::class, 'store']);
+    Route::get('cuentas-por-cobrar', [CuentaPorCobrarController::class, 'index']);
+    Route::get('cuentas-por-cobrar/{id}', [CuentaPorCobrarController::class, 'show']);
+    Route::put('cuentas-por-cobrar/{id}', [CuentaPorCobrarController::class, 'update']);
+    Route::post('cuentas-por-cobrar/{id}/pago', [CuentaPorCobrarController::class, 'registrarPago']);
+    Route::delete('cuentas-por-cobrar/{id}', [CuentaPorCobrarController::class, 'destroy']);
 });

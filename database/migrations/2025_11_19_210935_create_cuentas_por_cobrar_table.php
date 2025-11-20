@@ -16,6 +16,7 @@ return new class extends Migration
             $table->date('fecha_emision');
             $table->date('fecha_vencimiento');
             $table->string('estado', 50);
+            $table->string('descripcion', 500)->nullable();
             $table->date('fecha_pago')->nullable();
             $table->timestamps();
 
