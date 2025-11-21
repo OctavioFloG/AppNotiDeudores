@@ -8,8 +8,14 @@ use App\Http\Controllers\Api\ClientAuthController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas
-Route::post('institutions', [InstitutionController::class, 'store']);
 Route::post('auth/login', [AuthController::class, 'login']);
+
+// Rutas para admin
+Route::middleware('auth:sanctum')->group(function () {
+    // Instituciones
+    Route::post('institutions', [InstitutionController::class, 'store']);
+    Route::get('institutions', [InstitutionController::class, 'index']);
+});
 
 // Rutas para clientes (públicas - no necesitan token)
 Route::post('client-auth/generate-token/{id_cliente}', [ClientAuthController::class, 'generateAndSendToken']);

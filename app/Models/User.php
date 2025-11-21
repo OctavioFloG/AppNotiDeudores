@@ -2,10 +2,12 @@
 
 namespace App\Models;
 
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Container\Attributes\Auth;
 use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Database\Eloquent\Model;
 
-class User extends Model
+class User extends Authenticatable
 {
     use HasApiTokens;
 
@@ -30,5 +32,10 @@ class User extends Model
     public function institution()
     {
         return $this->belongsTo(Institution::class, 'id_institucion');
+    }
+
+    public function getAuthPassword()
+    {
+        return $this->contrasena_hash;
     }
 }
