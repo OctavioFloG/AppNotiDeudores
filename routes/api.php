@@ -42,6 +42,6 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Rutas protegidas cliente (requieren token de cliente)
-Route::middleware('auth:sanctum')->group(function () {
+Route::middleware('auth:client')->group(function () {
     Route::get('client/my-debts', [ClientAuthController::class, 'myDebts']);
 });
