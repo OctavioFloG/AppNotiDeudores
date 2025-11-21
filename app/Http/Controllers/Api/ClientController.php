@@ -11,7 +11,6 @@ class ClientController extends Controller
 {
     /**
      * Registrar un nuevo cliente
-     * US3: Registrar clientes
      * Solo usuarios autenticados (institución) pueden crear clientes
      */
     public function store(Request $request)
