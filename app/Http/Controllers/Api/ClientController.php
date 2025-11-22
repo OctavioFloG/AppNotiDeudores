@@ -15,17 +15,58 @@ class ClientController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth('sanctum')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado'
+            ], 401);
+        }
+
+        $institutionId = $user->id_institucion;
         // Validación
         $validator = Validator::make($request->all(), [
-            'nombre'   => 'required|string|max:255',
-            'telefono' => 'required|string|regex:/^\+?[1-9]\d{1,14}$/',
-            'correo'   => 'required|email|max:255',
+            'nombre' => [
+                'required',
+                'string',
+                'min:3',
+                'max:255'
+            ],
+            'telefono' => [
+                'required',
+                'string',
+                'regex:/^(\+\d{1,3}\s?)?(\d{1,4}\s?)*\d{1,4}$/',
+                'min:7',
+                'max:20',
+                // Verificar que no esté duplicado para esta institución
+                function ($attribute, $value, $fail) use ($institutionId) {
+                    $exists = Client::where('id_institucion', $institutionId)
+                        ->where('telefono', $value)
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('Este teléfono ya está registrado en la institución.');
+                    }
+                }
+            ],
+            'correo' => [
+                'required',
+                'email',
+                'max:255',
+                'unique:clients,correo'
+            ]
         ], [
-            'nombre.required'    => 'El nombre del cliente es requerido.',
-            'telefono.required'  => 'El teléfono es requerido.',
-            'telefono.regex'     => 'El formato del teléfono no es válido.',
-            'correo.required'    => 'El correo es requerido.',
-            'correo.email'       => 'El correo no es válido.',
+            'nombre.required' => 'El nombre es obligatorio',
+            'nombre.min' => 'El nombre debe tener al menos 3 caracteres',
+            'nombre.max' => 'El nombre no puede exceder 255 caracteres',
+            'telefono.required' => 'El teléfono es obligatorio',
+            'telefono.regex' => 'Formato de teléfono inválido. Use: +57 300 1234567',
+            'telefono.min' => 'El teléfono debe tener al menos 7 dígitos',
+            'telefono.max' => 'El teléfono no puede exceder 20 caracteres',
+            'correo.required' => 'El correo es obligatorio',
+            'correo.email' => 'El correo no es válido',
+            'correo.unique' => 'Este correo ya está registrado'
         ]);
 
         if ($validator->fails()) {
@@ -74,7 +115,6 @@ class ClientController extends Controller
                     'created_at'      => $client->created_at,
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -99,8 +139,8 @@ class ClientController extends Controller
             if ($search) {
                 $query->where(function ($q) use ($search) {
                     $q->where('nombre', 'LIKE', "%{$search}%")
-                    ->orWhere('telefono', 'LIKE', "%{$search}%")
-                    ->orWhere('correo', 'LIKE', "%{$search}%");
+                        ->orWhere('telefono', 'LIKE', "%{$search}%")
+                        ->orWhere('correo', 'LIKE', "%{$search}%");
                 });
             }
 
@@ -119,7 +159,6 @@ class ClientController extends Controller
                     'to' => $clients->lastItem(),
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -143,7 +182,6 @@ class ClientController extends Controller
                 'success' => true,
                 'data' => $client
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -186,7 +224,6 @@ class ClientController extends Controller
                 'message' => 'Cliente actualizado exitosamente',
                 'data' => $client
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -212,7 +249,6 @@ class ClientController extends Controller
                 'success' => true,
                 'message' => 'Cliente eliminado exitosamente'
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

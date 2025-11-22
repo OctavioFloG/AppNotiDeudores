@@ -92,4 +92,14 @@ class InstitutionDashboardController extends Controller
             ], 500);
         }
     }
+
+    public function crearCliente()
+    {
+        return view('institution.clients.create');
+    }
+
+    public function clientes()
+    {
+        return view('institution.clients.index');
+    }
 }

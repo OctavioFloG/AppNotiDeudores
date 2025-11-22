@@ -11,50 +11,54 @@ use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\InstitutionDashboardController;
 use Illuminate\Support\Facades\Route;
 
-// Rutas públicas
+// ========== RUTAS PÚBLICAS ==========
+
+// Auth institución
 Route::post('auth/login', [AuthController::class, 'login']);
 
-// Rutas para admin
-Route::middleware('auth:sanctum')->group(function () {
-    Route::post('institutions', [InstitutionController::class, 'store']);
-    Route::get('institutions', [InstitutionController::class, 'index']);
-});
-
-// Rutas para clientes (públicas - no necesitan token)
+// Auth cliente (generar y validar token)
 Route::post('client-auth/generate-token/{id_cliente}', [ClientAuthController::class, 'generateAndSendToken']);
 Route::post('client-auth/validate-token', [ClientAuthController::class, 'validateToken']);
 
-// Rutas protegidas institución (requieren token de institución)
+// ========== RUTAS PROTEGIDAS (Token de Institución) ==========
+
 Route::middleware('auth:sanctum')->group(function () {
-    // Auth institución
+    
+    // ========== ADMIN ==========
+    Route::post('institutions', [InstitutionController::class, 'store']);
+    Route::get('institutions', [InstitutionController::class, 'index']);
+    Route::get('admin/dashboard', [AdminDashboardController::class, 'dashboard']);
+
+    // ========== AUTH ==========
     Route::post('auth/logout', [AuthController::class, 'logout']);
     Route::post('auth/change-password', [AuthController::class, 'changePassword']);
     Route::get('auth/me', [AuthController::class, 'me']);
 
-    // Clients
-    Route::post('clients', [ClientController::class, 'store']);
-    Route::get('clients', [ClientController::class, 'index']);
-    Route::get('clients/{id}', [ClientController::class, 'show']);
-    Route::put('clients/{id}', [ClientController::class, 'update']);
-    Route::delete('clients/{id}', [ClientController::class, 'destroy']);
-
-    // Cuentas por Cobrar
-    Route::post('cuentas-por-cobrar', [CuentaPorCobrarController::class, 'store']);
-    Route::get('cuentas-por-cobrar', [CuentaPorCobrarController::class, 'index']);
-    Route::get('cuentas-por-cobrar/{id}', [CuentaPorCobrarController::class, 'show']);
-    Route::put('cuentas-por-cobrar/{id}', [CuentaPorCobrarController::class, 'update']);
-    Route::post('cuentas-por-cobrar/{id}/pago', [CuentaPorCobrarController::class, 'registrarPago']);
-    Route::delete('cuentas-por-cobrar/{id}', [CuentaPorCobrarController::class, 'destroy']);
-
-    // Generar token para cliente (desde panel institución)
-    Route::post('clients/{id_cliente}/send-token', [ClientAuthController::class, 'generateAndSendToken']);
-    
-    // Dashboard endpoints
-    Route::get('admin/dashboard', [AdminDashboardController::class, 'dashboard']);
+    // ========== INSTITUCIÓN DASHBOARD ==========
     Route::get('institution/dashboard', [InstitutionDashboardController::class, 'dashboard']);
+
+    // ========== CLIENTES ==========
+    Route::post('institution/clientes', [ClientController::class, 'store']);
+    Route::get('institution/clientes', [ClientController::class, 'index']);
+    Route::get('institution/clientes/{id}', [ClientController::class, 'show']);
+    Route::put('institution/clientes/{id}', [ClientController::class, 'update']);
+    Route::delete('institution/clientes/{id}', [ClientController::class, 'destroy']);
+    
+    // Generar token para cliente (desde panel institución)
+    Route::post('institution/clientes/{id_cliente}/send-token', [ClientAuthController::class, 'generateAndSendToken']);
+
+    // ========== DEUDAS / CUENTAS POR COBRAR ==========
+    Route::post('institution/deudas', [CuentaPorCobrarController::class, 'store']);
+    Route::get('institution/deudas', [CuentaPorCobrarController::class, 'index']);
+    Route::get('institution/deudas/{id}', [CuentaPorCobrarController::class, 'show']);
+    Route::put('institution/deudas/{id}', [CuentaPorCobrarController::class, 'update']);
+    Route::delete('institution/deudas/{id}', [CuentaPorCobrarController::class, 'destroy']);
+    Route::put('institution/deudas/{id}/pagar', [CuentaPorCobrarController::class, 'registrarPago']);
 });
 
-// Rutas protegidas cliente (requieren token de cliente)
+// ========== RUTAS PROTEGIDAS (Token de Cliente) ==========
+
 Route::middleware('auth:client')->group(function () {
     Route::get('client/my-debts', [ClientAuthController::class, 'myDebts']);
+    Route::get('client/me', [ClientAuthController::class, 'me']);
 });
