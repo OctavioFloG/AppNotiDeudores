@@ -25,7 +25,7 @@ Route::middleware([\App\Http\Middleware\AuthToken::class])->group(function () {
     // ========= INSTITUCIÓN =========
     Route::prefix('institution')->group(function () {
         // Dashboard
-        Route::get('dashboard', [InstitutionDashboardController::class, 'dashboard'])->name('institution.dashboard');
+        Route::get('dashboard', [InstitutionDashboardController::class, 'index'])->name('institution.dashboard');
         
         // Clientes
         Route::get('clientes', [InstitutionDashboardController::class, 'clientes'])->name('institution.clientes.index');
