@@ -399,9 +399,9 @@
 
             <div class="stat-card info">
                 <div class="stat-card-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                <div class="stat-card-label">Cuentas por Cobrar</div>
+                <div class="stat-card-label">Cuentas Totales</div>
                 <p class="stat-card-value" id="debtCount">0</p>
-                <div class="stat-card-meta">Deudas registradas</div>
+                <div class="stat-card-meta">Cuentas registradas</div>
             </div>
 
             <div class="stat-card warning">
@@ -448,13 +448,24 @@
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
 
-                <a href="#" class="action-card">
+                <a href="/institution/deudas/crear" class="action-card">
                     <div class="action-icon">
                         <i class="fas fa-dollar-sign"></i>
                     </div>
                     <div class="action-content">
                         <h3>Nueva Deuda</h3>
                         <p>Registrar una nueva cuenta por cobrar</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
+
+                <a href="/institution/deudas" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-folder"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Deudas</h3>
+                        <p>Ver todas las deudas registradas</p>
                     </div>
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>

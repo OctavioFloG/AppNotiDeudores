@@ -130,7 +130,8 @@ class CuentaPorCobrarController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = CuentaPorCobrar::where('id_institucion', $request->user()->id_institucion);
+            $query = CuentaPorCobrar::where('id_institucion', $request->user()->id_institucion)
+                ->with('client');  // ← Agregar esta línea
 
             // Filtrar por cliente si se proporciona
             if ($request->id_cliente) {
@@ -211,6 +212,19 @@ class CuentaPorCobrarController extends Controller
      */
     public function update(Request $request, $id)
     {
+        $user = auth('sanctum')->user();
+
+        $debt = CuentaPorCobrar::where('id_cuenta', $id)
+            ->where('id_institucion', $user->id_institucion)
+            ->first();
+
+        if (!$debt) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Deuda no encontrada'
+            ], 404);
+        }
+
         $validator = Validator::make($request->all(), [
             'monto'             => 'sometimes|required|numeric|min:0.01',
             'fecha_emision'     => 'sometimes|required|date',
@@ -280,53 +294,50 @@ class CuentaPorCobrarController extends Controller
      */
     public function registrarPago(Request $request, $id)
     {
-        $validator = Validator::make($request->all(), [
-            'fecha_pago' => 'required|date',
-        ]);
+        $user = auth('sanctum')->user();
 
-        if ($validator->fails()) {
+        $debt = CuentaPorCobrar::where('id_cuenta', $id)
+            ->where('id_institucion', $user->id_institucion)
+            ->first();
+
+        if (!$debt) {
             return response()->json([
                 'success' => false,
-                'message' => 'Error de validación',
-                'errors' => $validator->errors()
-            ], 422);
+                'message' => 'Deuda no encontrada'
+            ], 404);
+        }
+
+        // Validar que la cuenta no esté ya pagada
+        if ($debt->estado === 'Pagada') {
+            return response()->json([
+                'success' => false,
+                'message' => 'Esta deuda ya fue pagada anteriormente',
+                'data' => [
+                    'id' => $debt->id_cuenta,
+                    'estado' => $debt->estado,
+                    'fecha_pago' => $debt->fecha_pago,
+                ]
+            ], 400);
         }
 
         try {
-            $cuenta = CuentaPorCobrar::where('id_cuenta', $id)
-                ->where('id_institucion', $request->user()->id_institucion)
-                ->firstOrFail();
-
-            // Validar que la cuenta no esté ya pagada
-            if ($cuenta->estado === 'Pagada') {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Esta deuda ya fue pagada anteriormente',
-                    'data' => [
-                        'id' => $cuenta->id_cuenta,
-                        'estado' => $cuenta->estado,
-                        'fecha_pago' => $cuenta->fecha_pago,
-                    ]
-                ], 400);
-            }
-
-            // Registrar pago
-            $cuenta->update([
+            // Registrar pago (sin validar fecha_pago)
+            $debt->update([
                 'estado'      => 'Pagada',
-                'fecha_pago'  => $request->fecha_pago
+                'fecha_pago'  => now()->toDateString()
             ]);
 
             return response()->json([
                 'success' => true,
                 'message' => 'Pago registrado exitosamente',
                 'data' => [
-                    'id'              => $cuenta->id_cuenta,
-                    'id_cliente'      => $cuenta->id_cliente,
-                    'monto'           => $cuenta->monto,
-                    'estado'          => $cuenta->estado,
-                    'fecha_pago'      => $cuenta->fecha_pago,
-                    'fecha_emision'   => $cuenta->fecha_emision,
-                    'fecha_vencimiento' => $cuenta->fecha_vencimiento,
+                    'id'              => $debt->id_cuenta,
+                    'id_cliente'      => $debt->id_cliente,
+                    'monto'           => $debt->monto,
+                    'estado'          => $debt->estado,
+                    'fecha_pago'      => $debt->fecha_pago,
+                    'fecha_emision'   => $debt->fecha_emision,
+                    'fecha_vencimiento' => $debt->fecha_vencimiento,
                 ]
             ], 200);
         } catch (\Exception $e) {

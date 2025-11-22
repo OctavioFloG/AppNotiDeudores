@@ -43,13 +43,13 @@ class InstitutionDashboardController extends Controller
 
             // Deudas pendientes
             $pendingCount = CuentaPorCobrar::where('id_institucion', $institutionId)
-                ->where('estado', '!=', 'pagado')
+                ->where('estado', '!=', 'Pagada')
                 ->count();
 
             // Deudas vencidas
             $overdueCount = CuentaPorCobrar::where('id_institucion', $institutionId)
                 ->where('fecha_vencimiento', '<', now())
-                ->where('estado', '!=', 'pagado')
+                ->where('estado', '=', 'Vencida')
                 ->count();
 
             // Clientes recientes con sus deudas
@@ -101,5 +101,20 @@ class InstitutionDashboardController extends Controller
     public function clientes()
     {
         return view('institution.clients.index');
+    }
+
+    public function verCliente($id)
+    {
+        return view('institution.clients.show', ['clientId' => $id]);
+    }
+
+    public function crearDeuda()
+    {
+        return view('institution.deudas.create');
+    }
+
+    public function deudas()
+    {
+        return view('institution.deudas.index');
     }
 }

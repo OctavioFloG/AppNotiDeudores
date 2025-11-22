@@ -142,7 +142,15 @@ class AuthController extends Controller
      */
     public function me(Request $request)
     {
-        $user = $request->user();
+        $user = auth('sanctum')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado'
+            ], 401);
+        }
+        
         $institution = $user->institution;
 
         return response()->json([

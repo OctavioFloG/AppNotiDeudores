@@ -356,7 +356,8 @@
                 justify-content: center;
             }
 
-            th, td {
+            th,
+            td {
                 padding: 12px 8px;
                 font-size: 12px;
             }
@@ -460,10 +461,10 @@
                 const nombre = cliente.nombre.toLowerCase();
                 const telefono = cliente.telefono.toLowerCase();
                 const correo = cliente.correo.toLowerCase();
-                
-                return nombre.includes(searchTerm) || 
-                       telefono.includes(searchTerm) || 
-                       correo.includes(searchTerm);
+
+                return nombre.includes(searchTerm) ||
+                    telefono.includes(searchTerm) ||
+                    correo.includes(searchTerm);
             });
 
             if (clientesFiltrados.length === 0) {
@@ -479,50 +480,50 @@
 
             // Generar tabla
             let html = `
-                <div class="table-container">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Nombre</th>
-                                <th>Teléfono</th>
-                                <th>Correo</th>
-                                <th style="text-align: center;">Acciones</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-            `;
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Nombre</th>
+                                    <th>Teléfono</th>
+                                    <th>Correo</th>
+                                    <th style="text-align: center;">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                `;
 
             clientesPagina.forEach(cliente => {
                 html += `
-                    <tr>
-                        <td>
-                            <div class="client-name">${cliente.nombre}</div>
-                        </td>
-                        <td>${cliente.telefono}</td>
-                        <td>
-                            <div class="client-info">${cliente.correo}</div>
-                        </td>
-                        <td style="text-align: center;">
-                            <div class="actions" style="justify-content: center;">
-                                <button class="action-btn action-view" onclick="verCliente(${cliente.id_cliente})">
-                                    <i class="fas fa-eye"></i>
-                                    Ver
-                                </button>
-                                <button class="action-btn action-delete" onclick="eliminarCliente(${cliente.id_cliente}, '${cliente.nombre}')">
-                                    <i class="fas fa-trash"></i>
-                                    Eliminar
-                                </button>
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                        <tr>
+                            <td>
+                                <div class="client-name">${cliente.nombre}</div>
+                            </td>
+                            <td>${cliente.telefono}</td>
+                            <td>
+                                <div class="client-info">${cliente.correo}</div>
+                            </td>
+                            <td style="text-align: center;">
+                                <div class="actions" style="justify-content: center;">
+                                    <button class="action-btn action-view" onclick="verHistorial(${cliente.id_cliente})">
+                                        <i class="fas fa-history"></i>
+                                        Historial
+                                    </button>
+                                    <button class="action-btn action-delete" onclick="eliminarCliente(${cliente.id_cliente}, '${cliente.nombre}')">
+                                        <i class="fas fa-trash"></i>
+                                        Eliminar
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
             });
 
             html += `
                         </tbody>
                     </table>
                 </div>
-            `;
+                `;
 
             // Agregar paginación
             if (totalPaginas > 1) {
@@ -546,7 +547,7 @@
                             </button>
                         </div>
                     </div>
-                `;
+                    `;
             }
 
             document.getElementById('tableContainer').innerHTML = html;
@@ -565,7 +566,7 @@
                         Crear primer cliente
                     </a>
                 </div>
-            `;
+                `;
         }
 
         function verCliente(id) {
@@ -589,9 +590,9 @@
 
             const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
             alert.innerHTML = `
-                <i class="fas ${icon}"></i>
-                <span>${mensaje}</span>
-            `;
+                    <i class="fas ${icon}"></i>
+                    <span>${mensaje}</span>
+                `;
 
             container.appendChild(alert);
 
@@ -599,5 +600,10 @@
                 setTimeout(() => alert.remove(), 5000);
             }
         }
+
+        function verHistorial(clienteId) {
+            window.location.href = `/institution/clientes/${clienteId}`;
+        }
+
     </script>
 @endsection
