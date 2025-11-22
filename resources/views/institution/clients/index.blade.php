@@ -13,6 +13,9 @@
             color: white;
             padding: 30px 40px;
             margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .page-header h1 {
@@ -22,6 +25,18 @@
         }
 
         .page-header p {
+            margin: 5px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+
+        .page-header-left h1 {
+            margin: 0;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .page-header-left p {
             margin: 5px 0 0 0;
             opacity: 0.9;
             font-size: 14px;
@@ -114,6 +129,17 @@
             gap: 6px;
             font-family: inherit;
             white-space: nowrap;
+        }
+
+        .btn-nav {
+            background: white;
+            color: #047857;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .btn-nav:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
         }
 
         .btn-primary {
@@ -373,8 +399,14 @@
 @section('content')
     <!-- Page Header -->
     <div class="page-header">
-        <h1><i class="fas fa-users"></i> Mis Clientes</h1>
-        <p>Gestiona todos los clientes registrados</p>
+        <div class="page-header-left">
+            <h1><i class="fas fa-users"></i> Mis Clientes</h1>
+            <p>Gestiona todos los clientes registrados</p>
+        </div>
+
+        <a href="/institution/dashboard" class="btn btn-nav">
+            <i class="fas fa-arrow-left"></i> Regresar
+        </a>
     </div>
 
     <!-- Main Container -->
