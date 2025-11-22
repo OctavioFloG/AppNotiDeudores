@@ -478,7 +478,7 @@
                         if (rol === 'administrador') {
                             window.location.href = '/admin/dashboard';
                         } else if (rol === 'institucion') {
-                            window.location.href = '/institucional/dashboard';
+                            window.location.href = '/institution/dashboard';
                         } else {
                             window.location.href = '/';
                         }

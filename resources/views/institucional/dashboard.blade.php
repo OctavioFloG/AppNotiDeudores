@@ -426,7 +426,7 @@
             </div>
 
             <div class="quick-actions">
-                <a href="/institucional/clientes/crear" class="action-card">
+                <a href="/institution/clientes/crear" class="action-card">
                     <div class="action-icon">
                         <i class="fas fa-user-plus"></i>
                     </div>
@@ -437,7 +437,7 @@
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
 
-                <a href="/institucional/clientes" class="action-card">
+                <a href="/institution/clientes" class="action-card">
                     <div class="action-icon">
                         <i class="fas fa-list"></i>
                     </div>
@@ -515,7 +515,7 @@
 
         async function cargarDashboard() {
             try {
-                const data = await API_CONFIG.call('institucional/dashboard', 'GET');
+                const data = await API_CONFIG.call('institution/dashboard', 'GET');
 
                 if (data.success) {
                     actualizarEstadisticas(data.stats);
@@ -549,7 +549,7 @@
                             <i class="fas fa-inbox"></i>
                         </div>
                         <h3 style="color: #6b7280; margin-bottom: 8px;">Sin clientes</h3>
-                        <p style="color: #9ca3af; margin: 0;">No hay clientes registrados. <a href="/institucional/clientes/crear" style="color: #047857; font-weight: 600;">Crear primer cliente</a></p>
+                        <p style="color: #9ca3af; margin: 0;">No hay clientes registrados. <a href="/institution/clientes/crear" style="color: #047857; font-weight: 600;">Crear primer cliente</a></p>
                     </div>
                 `;
                 return;

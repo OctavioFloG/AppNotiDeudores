@@ -8,7 +8,7 @@ use App\Http\Controllers\Api\CuentaPorCobrarController;
 use App\Http\Controllers\Api\ClientAuthController;
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Web\AdminDashboardController;
-use App\Http\Controllers\Web\InstitucionalDashboardController;
+use App\Http\Controllers\Web\InstitutionDashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas
@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->group(function () {
     
     // Dashboard endpoints
     Route::get('admin/dashboard', [AdminDashboardController::class, 'dashboard']);
-    Route::get('institucional/dashboard', [InstitucionalDashboardController::class, 'dashboard']);
+    Route::get('institution/dashboard', [InstitutionDashboardController::class, 'dashboard']);
 });
 
 // Rutas protegidas cliente (requieren token de cliente)

@@ -7,7 +7,7 @@ use App\Models\Client;
 use App\Models\CuentaPorCobrar;
 use Symfony\Component\HttpFoundation\Request;
 
-class InstitucionalDashboardController extends Controller
+class InstitutionDashboardController extends Controller
 {
     public function index()
     {

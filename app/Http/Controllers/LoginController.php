@@ -26,7 +26,7 @@ class LoginController extends Controller
             if ($user->rol === 'administrador') {
                 return redirect()->route('admin.dashboard');
             } elseif ($user->rol === 'institucion') {
-                return redirect()->route('institucional.dashboard');
+                return redirect()->route('institution.dashboard');
             }
             return redirect('/');
         }
@@ -39,18 +39,18 @@ class LoginController extends Controller
     {
         $user = Auth::user();
         $institution = $user->institution;
-        return view('institucional.dashboard', compact('user', 'institution'));
+        return view('institution.dashboard', compact('user', 'institution'));
     }
 
     public function logout()
     {
         Auth::logout();
-        return redirect()->route('institucional.login');
+        return redirect()->route('institution.login');
     }
 
     public function showChangeForm()
     {
-        return view('institucional.cambiar_contrasena');
+        return view('institution.cambiar_contrasena');
     }
 
     public function changeCredentials(Request $request)

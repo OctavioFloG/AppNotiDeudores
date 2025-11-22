@@ -20,7 +20,7 @@ class RedirectIfAuthenticatedToDashboard
                 return redirect()->route('admin.dashboard');
             }
             if ($user->rol === 'institucion') {
-                return redirect()->route('institucional.dashboard');
+                return redirect()->route('institution.dashboard');
             }
         }
 

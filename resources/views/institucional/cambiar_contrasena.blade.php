@@ -25,7 +25,7 @@
         <button type="submit">Cambiar contraseña</button>
     </form>
     
-    <a href="{{ route('institucional.dashboard') }}">Volver al panel</a>
+    <a href="{{ route('institution.dashboard') }}">Volver al panel</a>
 
     <script>
         document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
