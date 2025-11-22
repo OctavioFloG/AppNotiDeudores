@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Institucional;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -11,30 +11,29 @@ class LoginController extends Controller
 {
     public function showLoginForm()
     {
-        return view('institucional.login');
+        return view('auth.login');
     }
 
     public function login(Request $request)
     {
-        $usuario = $request->input('usuario');
-        $contrasena = $request->input('contrasena');
+        $credentials = [
+            'usuario' => $request->input('usuario'),
+            'password' => $request->input('contrasena')
+        ];
 
-        if (Auth::attempt(['usuario' => $usuario, 'password' => $contrasena])) {
+        if (Auth::attempt($credentials)) {
             $user = Auth::user();
-
-            // Redirige según el rol
             if ($user->rol === 'administrador') {
                 return redirect()->route('admin.dashboard');
-            }
-            if ($user->rol === 'institucion') {
+            } elseif ($user->rol === 'institucion') {
                 return redirect()->route('institucional.dashboard');
             }
-            // Por si hay otros tipos, agrega aquí más condiciones
-            return redirect('/'); // Redirige a inicio si no es admin/institucion
+            return redirect('/');
         }
 
         return back()->with('error', 'Credenciales inválidas.');
     }
+
 
     public function dashboard()
     {

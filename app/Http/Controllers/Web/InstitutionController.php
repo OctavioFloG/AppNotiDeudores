@@ -1,7 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 
 class InstitutionController extends Controller
@@ -11,7 +12,7 @@ class InstitutionController extends Controller
      */
     public function index()
     {
-        //
+       return view('admin.institutions.index');
     }
 
     /**
@@ -19,7 +20,7 @@ class InstitutionController extends Controller
      */
     public function create()
     {
-        //
+        return view('admin.institutions.create');
     }
 
     /**

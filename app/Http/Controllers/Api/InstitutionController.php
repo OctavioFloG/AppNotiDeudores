@@ -4,10 +4,8 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Institution;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 
 class InstitutionController extends Controller
@@ -22,7 +20,7 @@ class InstitutionController extends Controller
             ], 403);
         }
 
-        $validator = Validator::make($request->all(), [
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
             'nombre' => 'required|string|max:255|unique:institutions,nombre',
             'direccion' => 'required|string|max:255',
             'correo' => 'required|email|max:255|unique:institutions,correo',
@@ -48,10 +46,10 @@ class InstitutionController extends Controller
 
             // Generar credenciales automáticamente
             $usuario = strtolower(str_replace(' ', '_', $request->nombre)) . '_' . Str::random(4);
-            $contrasena = Str::random(12); // Contraseña fuerte
+            $contrasena = Str::random(12);
 
             // Crear usuario para la institución
-            $user = User::create([
+            $user = \App\Models\User::create([
                 'id_institucion' => $institution->id_institucion,
                 'usuario' => $usuario,
                 'contrasena_hash' => Hash::make($contrasena),
@@ -76,7 +74,6 @@ class InstitutionController extends Controller
                     ]
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

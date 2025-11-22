@@ -1,10 +1,14 @@
 <?php
 
+use App\Http\Controllers\Api\AdminController;
 use App\Http\Controllers\Api\InstitutionController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\CuentaPorCobrarController;
 use App\Http\Controllers\Api\ClientAuthController;
+use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Web\AdminDashboardController;
+use App\Http\Controllers\Web\InstitucionalDashboardController;
 use Illuminate\Support\Facades\Route;
 
 // Rutas públicas
@@ -12,7 +16,6 @@ Route::post('auth/login', [AuthController::class, 'login']);
 
 // Rutas para admin
 Route::middleware('auth:sanctum')->group(function () {
-    // Instituciones
     Route::post('institutions', [InstitutionController::class, 'store']);
     Route::get('institutions', [InstitutionController::class, 'index']);
 });
@@ -45,6 +48,10 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Generar token para cliente (desde panel institución)
     Route::post('clients/{id_cliente}/send-token', [ClientAuthController::class, 'generateAndSendToken']);
+    
+    // Dashboard endpoints
+    Route::get('admin/dashboard', [AdminDashboardController::class, 'dashboard']);
+    Route::get('institucional/dashboard', [InstitucionalDashboardController::class, 'dashboard']);
 });
 
 // Rutas protegidas cliente (requieren token de cliente)
