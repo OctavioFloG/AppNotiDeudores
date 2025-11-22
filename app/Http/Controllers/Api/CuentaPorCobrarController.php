@@ -15,13 +15,52 @@ class CuentaPorCobrarController extends Controller
      */
     public function store(Request $request)
     {
+        $user = auth('sanctum')->user();
+
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No autenticado'
+            ], 401);
+        }
+
+        $institutionId = $user->id_institucion;
+
         // Validación
         $validator = Validator::make($request->all(), [
-            'id_cliente'           => 'required|integer|exists:clients,id_cliente',
-            'monto'                => 'required|numeric|min:0.01',
-            'fecha_emision'        => 'required|date',
-            'fecha_vencimiento'    => 'required|date|after_or_equal:fecha_emision',
-            'descripcion'          => 'nullable|string|max:500',
+            'id_cliente' => [
+                'required',
+                'integer',
+                function ($attribute, $value, $fail) use ($institutionId) {
+                    $clientExists = Client::where('id_cliente', $value)
+                        ->where('id_institucion', $institutionId)
+                        ->exists();
+
+                    if (!$clientExists) {
+                        $fail('El cliente seleccionado no pertenece a tu institución.');
+                    }
+                }
+            ],
+            'monto' => [
+                'required',
+                'numeric',
+                'min:0.01'
+            ],
+            'descripcion' => [
+                'required',
+                'string',
+                'min:3',
+                'max:255'
+            ],
+            'fecha_emision' => [
+                'required',
+                'date'
+            ],
+            'fecha_vencimiento' => [
+                'required',
+                'date',
+                'after:fecha_emision'
+            ]
         ], [
             'id_cliente.required'           => 'El cliente es requerido.',
             'id_cliente.exists'             => 'El cliente no existe.',
