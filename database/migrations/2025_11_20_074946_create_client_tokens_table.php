@@ -12,6 +12,7 @@ return new class extends Migration
             $table->id('id_token');
             $table->unsignedBigInteger('id_cliente');
             $table->string('token', 255)->unique();
+            $table->text('qr_code')->nullable();
             $table->timestamp('expires_at');
             $table->boolean('used')->default(false);
             $table->timestamp('used_at')->nullable();

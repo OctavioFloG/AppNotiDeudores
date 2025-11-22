@@ -13,6 +13,7 @@ class ClientToken extends Model
     protected $fillable = [
         'id_cliente',
         'token',
+        'qr_code',
         'expires_at',
         'used',
         'used_at',
