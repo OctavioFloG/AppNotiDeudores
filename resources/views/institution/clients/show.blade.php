@@ -362,10 +362,6 @@
                     <div class="info-label">Teléfono</div>
                     <div class="info-value" id="infoTelefono">-</div>
                 </div>
-                <div class="info-item">
-                    <div class="info-label">Estado</div>
-                    <div class="info-value" id="infoEstado">-</div>
-                </div>
             </div>
         </div>
 
@@ -486,10 +482,6 @@
             document.getElementById('infoNombre').textContent = cliente.nombre;
             document.getElementById('infoCorreo').textContent = cliente.correo;
             document.getElementById('infoTelefono').textContent = cliente.telefono;
-            document.getElementById('infoEstado').textContent =
-                cliente.estado === 'activo'
-                    ? '<span style="color: #065f46; font-weight: 600;">Activo</span>'
-                    : '<span style="color: #991b1b; font-weight: 600;">Inactivo</span>';
         }
 
         function calcularEstadisticas() {
