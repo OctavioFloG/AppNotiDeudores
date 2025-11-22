@@ -76,7 +76,6 @@ class CuentaPorCobrarController extends Controller
                     'created_at'          => $cuenta->created_at,
                 ]
             ], 201);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -136,7 +135,6 @@ class CuentaPorCobrarController extends Controller
                 'data' => $cuentas,
                 'total' => $cuentas->count()
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -160,7 +158,6 @@ class CuentaPorCobrarController extends Controller
                 'success' => true,
                 'data' => $cuenta
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -170,74 +167,73 @@ class CuentaPorCobrarController extends Controller
         }
     }
 
-/**
- * Actualizar una cuenta por cobrar
- */
-public function update(Request $request, $id)
-{
-    $validator = Validator::make($request->all(), [
-        'monto'             => 'sometimes|required|numeric|min:0.01',
-        'fecha_emision'     => 'sometimes|required|date',
-        'fecha_vencimiento' => 'sometimes|required|date',
-        'descripcion'       => 'sometimes|nullable|string|max:500',
-        'estado'            => 'sometimes|required|in:Pendiente,Pagada,Vencida',
-        'fecha_pago'        => 'sometimes|nullable|date',
-    ]);
+    /**
+     * Actualizar una cuenta por cobrar
+     */
+    public function update(Request $request, $id)
+    {
+        $validator = Validator::make($request->all(), [
+            'monto'             => 'sometimes|required|numeric|min:0.01',
+            'fecha_emision'     => 'sometimes|required|date',
+            'fecha_vencimiento' => 'sometimes|required|date',
+            'descripcion'       => 'sometimes|nullable|string|max:500',
+            'estado'            => 'sometimes|required|in:Pendiente,Pagada,Vencida',
+            'fecha_pago'        => 'sometimes|nullable|date',
+        ]);
 
-    if ($validator->fails()) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error de validación',
-            'errors' => $validator->errors()
-        ], 422);
-    }
-
-    try {
-        $cuenta = CuentaPorCobrar::where('id_cuenta', $id)
-            ->where('id_institucion', $request->user()->id_institucion)
-            ->firstOrFail();
-
-        // Validación: Si ya está pagada, NO permitir cambios
-        if ($cuenta->estado === 'Pagada') {
+        if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'message' => 'Esta deuda ya fue pagada. No se puede modificar una cuenta pagada.',
-                'data' => [
-                    'id' => $cuenta->id_cuenta,
-                    'estado' => $cuenta->estado,
-                    'fecha_pago' => $cuenta->fecha_pago,
-                ]
-            ], 400);
+                'message' => 'Error de validación',
+                'errors' => $validator->errors()
+            ], 422);
         }
 
-        // Actualizar solo los campos que se envíen
-        $datosActualizar = $request->only('monto', 'fecha_emision', 'fecha_vencimiento', 'descripcion', 'estado', 'fecha_pago');
-        
-        $cuenta->update($datosActualizar);
+        try {
+            $cuenta = CuentaPorCobrar::where('id_cuenta', $id)
+                ->where('id_institucion', $request->user()->id_institucion)
+                ->firstOrFail();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Cuenta por cobrar actualizada exitosamente',
-            'data' => [
-                'id'                  => $cuenta->id_cuenta,
-                'id_cliente'          => $cuenta->id_cliente,
-                'monto'               => $cuenta->monto,
-                'fecha_emision'       => $cuenta->fecha_emision,
-                'fecha_vencimiento'   => $cuenta->fecha_vencimiento,
-                'descripcion'         => $cuenta->descripcion,
-                'estado'              => $cuenta->estado,
-                'fecha_pago'          => $cuenta->fecha_pago,
-            ]
-        ], 200);
+            // Validación: Si ya está pagada, NO permitir cambios
+            if ($cuenta->estado === 'Pagada') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Esta deuda ya fue pagada. No se puede modificar una cuenta pagada.',
+                    'data' => [
+                        'id' => $cuenta->id_cuenta,
+                        'estado' => $cuenta->estado,
+                        'fecha_pago' => $cuenta->fecha_pago,
+                    ]
+                ], 400);
+            }
 
-    } catch (\Exception $e) {
-        return response()->json([
-            'success' => false,
-            'message' => 'Error al actualizar cuenta por cobrar',
-            'error'   => $e->getMessage()
-        ], 500);
+            // Actualizar solo los campos que se envíen
+            $datosActualizar = $request->only('monto', 'fecha_emision', 'fecha_vencimiento', 'descripcion', 'estado', 'fecha_pago');
+
+            $cuenta->update($datosActualizar);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Cuenta por cobrar actualizada exitosamente',
+                'data' => [
+                    'id'                  => $cuenta->id_cuenta,
+                    'id_cliente'          => $cuenta->id_cliente,
+                    'monto'               => $cuenta->monto,
+                    'fecha_emision'       => $cuenta->fecha_emision,
+                    'fecha_vencimiento'   => $cuenta->fecha_vencimiento,
+                    'descripcion'         => $cuenta->descripcion,
+                    'estado'              => $cuenta->estado,
+                    'fecha_pago'          => $cuenta->fecha_pago,
+                ]
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error al actualizar cuenta por cobrar',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
     }
-}
 
 
     /**
@@ -294,7 +290,6 @@ public function update(Request $request, $id)
                     'fecha_vencimiento' => $cuenta->fecha_vencimiento,
                 ]
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
@@ -320,7 +315,6 @@ public function update(Request $request, $id)
                 'success' => true,
                 'message' => 'Cuenta por cobrar eliminada exitosamente'
             ], 200);
-
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
