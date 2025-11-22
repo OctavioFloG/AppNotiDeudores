@@ -5,9 +5,10 @@ namespace App\Http\Controllers\Web;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\CuentaPorCobrar;
-use Symfony\Component\HttpFoundation\Request;
+use Illuminate\Http\Request;
 
 class InstitutionDashboardController extends Controller
+
 {
     public function index()
     {
@@ -18,6 +19,8 @@ class InstitutionDashboardController extends Controller
     {
         try {
             $user = auth('sanctum')->user();
+            // Escribir en consola del navegador
+            error_log('Usuario autenticado: ' . json_encode($user));
 
             if (!$user) {
                 return response()->json([
