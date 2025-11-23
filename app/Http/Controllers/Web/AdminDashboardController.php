@@ -24,7 +24,7 @@ class AdminDashboardController extends Controller
         $userCount = User::count();
         $debtCount = CuentaPorCobrar::count();
         $overdueCount = CuentaPorCobrar::where('fecha_vencimiento', '<', now())
-                            ->where('estado', '!=', 'pagado')
+                            ->where('estado', '!=', 'Pagada')
                             ->count();
 
         // Deudas recientes

@@ -683,12 +683,12 @@
 
             deudas.forEach(deuda => {
                 const estado = deuda.estado || 'pendiente';
-                const badge = estado === 'pagado' ? 'badge-success' :
+                const badge = estado === 'Pagada' ? 'badge-success' :
                     (new Date(deuda.fecha_vencimiento) < new Date() ? 'badge-danger' : 'badge-warning');
 
                 html += `
                     <tr>
-                        <td>#${deuda.id}</td>
+                        <td>#${deuda.id_cuenta}</td>
                         <td>${deuda.institution?.nombre || 'N/A'}</td>
                         <td>${deuda.client?.nombre || 'N/A'}</td>
                         <td>$${parseFloat(deuda.monto).toLocaleString('es-CO', { minimumFractionDigits: 2 })}</td>

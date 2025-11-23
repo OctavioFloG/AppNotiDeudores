@@ -249,6 +249,25 @@
             background: #fecaca;
         }
 
+        .action-send-token {
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+        }
+
+        .action-send-token:hover {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+        }
+
+        .action-send-token:disabled {
+            background: #d1d5db;
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+
         /* Empty State */
         .empty-state {
             text-align: center;
@@ -512,17 +531,17 @@
 
             // Generar tabla
             let html = `
-                    <div class="table-container">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Nombre</th>
-                                    <th>Teléfono</th>
-                                    <th>Correo</th>
-                                    <th style="text-align: center;">Acciones</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Teléfono</th>
+                            <th>Correo</th>
+                            <th style="text-align: center;">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
                 `;
 
             clientesPagina.forEach(cliente => {
@@ -536,12 +555,21 @@
                                 <div class="client-info">${cliente.correo}</div>
                             </td>
                             <td style="text-align: center;">
-                                <div class="actions" style="justify-content: center;">
-                                    <button class="action-btn action-view" onclick="verHistorial(${cliente.id_cliente})">
+                                <div class="actions" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
+                                    <!-- Botón Enviar Token WhatsApp -->
+                                    <button class="action-btn action-send-token" onclick="enviarTokenWhatsApp(${cliente.id_cliente}, '${cliente.nombre}', '${cliente.telefono}')" title="Enviar token por WhatsApp">
+                                        <i class="fas fa-paper-plane"></i>
+                                        Token
+                                    </button>
+
+                                    <!-- Botón Ver Historial -->
+                                    <button class="action-btn action-view" onclick="verHistorial(${cliente.id_cliente})" title="Ver historial de deudas">
                                         <i class="fas fa-history"></i>
                                         Historial
                                     </button>
-                                    <button class="action-btn action-delete" onclick="eliminarCliente(${cliente.id_cliente}, '${cliente.nombre}')">
+
+                                    <!-- Botón Eliminar -->
+                                    <button class="action-btn action-delete" onclick="eliminarCliente(${cliente.id_cliente}, '${cliente.nombre}')" title="Eliminar cliente">
                                         <i class="fas fa-trash"></i>
                                         Eliminar
                                     </button>
@@ -552,34 +580,34 @@
             });
 
             html += `
-                        </tbody>
-                    </table>
-                </div>
-                `;
+                    </tbody>
+                </table>
+            </div>
+            `;
 
             // Agregar paginación
             if (totalPaginas > 1) {
                 html += `
-                    <div class="pagination-container">
-                        <div class="pagination">
-                            <button onclick="mostrarTabla(1)" ${pagina === 1 ? 'disabled class="disabled"' : ''}>
-                                <i class="fas fa-chevron-left"></i> Primera
-                            </button>
-                            <button onclick="mostrarTabla(${pagina - 1})" ${pagina === 1 ? 'disabled class="disabled"' : ''}>
-                                Anterior
-                            </button>
-                            <span style="padding: 0 12px; color: #6b7280; font-size: 13px;">
-                                Página ${pagina} de ${totalPaginas}
-                            </span>
-                            <button onclick="mostrarTabla(${pagina + 1})" ${pagina === totalPaginas ? 'disabled class="disabled"' : ''}>
-                                Siguiente
-                            </button>
-                            <button onclick="mostrarTabla(${totalPaginas})" ${pagina === totalPaginas ? 'disabled class="disabled"' : ''}>
-                                Última <i class="fas fa-chevron-right"></i>
-                            </button>
-                        </div>
+                <div class="pagination-container">
+                    <div class="pagination">
+                        <button onclick="mostrarTabla(1)" ${pagina === 1 ? 'disabled class="disabled"' : ''}>
+                            <i class="fas fa-chevron-left"></i> Primera
+                        </button>
+                        <button onclick="mostrarTabla(${pagina - 1})" ${pagina === 1 ? 'disabled class="disabled"' : ''}>
+                            Anterior
+                        </button>
+                        <span style="padding: 0 12px; color: #6b7280; font-size: 13px;">
+                            Página ${pagina} de ${totalPaginas}
+                        </span>
+                        <button onclick="mostrarTabla(${pagina + 1})" ${pagina === totalPaginas ? 'disabled class="disabled"' : ''}>
+                            Siguiente
+                        </button>
+                        <button onclick="mostrarTabla(${totalPaginas})" ${pagina === totalPaginas ? 'disabled class="disabled"' : ''}>
+                            Última <i class="fas fa-chevron-right"></i>
+                        </button>
                     </div>
-                    `;
+                </div>
+                `;
             }
 
             document.getElementById('tableContainer').innerHTML = html;
@@ -636,6 +664,155 @@
         function verHistorial(clienteId) {
             window.location.href = `/institution/clientes/${clienteId}`;
         }
+
+        async function enviarTokenWhatsApp(clienteId, clienteNombre, clienteTelefono) {
+        // Mostrar confirmación
+        if (!confirm(`¿Enviar token de acceso a ${clienteNombre} (${clienteTelefono})?`)) {
+            return;
+        }
+
+        // Desactivar botón mientras se envía
+        const btn = event.target.closest('.action-send-token');
+        const btnText = btn.innerHTML;
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+        try {
+            const response = await API_CONFIG.call(
+                `institution/clientes/${clienteId}/send-token`,
+                'POST'
+            );
+
+            if (response.success) {
+                // Mostrar modal con el token
+                mostrarModalToken(response.data);
+                mostrarAlerta(`Token enviado exitosamente a ${clienteNombre}`, 'success');
+            } else {
+                mostrarAlerta(response.message || 'Error al enviar token', 'error');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            mostrarAlerta('Error de conexión', 'error');
+        } finally {
+            // Restaurar botón
+            btn.disabled = false;
+            btn.innerHTML = btnText;
+        }
+    }
+
+    function mostrarModalToken(data) {
+        const modal = `
+            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="modal-token">
+                <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <i class="fas fa-check-circle" style="font-size: 48px; color: #10b981; margin-bottom: 15px;"></i>
+                        <h2 style="color: #1f2937; margin: 0;">Token Enviado</h2>
+                    </div>
+
+                    <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Información del Envío</div>
+                        <p style="margin: 8px 0; color: #1f2937;"><strong>Cliente:</strong> ${data.cliente_nombre}</p>
+                        <p style="margin: 8px 0; color: #1f2937;"><strong>Teléfono:</strong> ${data.cliente_telefono}</p>
+                        <p style="margin: 8px 0; color: #1f2937;"><strong>Estado:</strong> ✓ Enviado por WhatsApp</p>
+                    </div>
+
+                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%); border: 2px solid #047857; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                        <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">Token Generado</div>
+                        <div style="font-size: 48px; font-weight: 700; color: #047857; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; margin: 15px 0;">
+                            ${data.token}
+                        </div>
+                        <div style="font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 10px;">
+                            Válido por 5 minutos
+                        </div>
+                        <button onclick="copiarTokenModal('${data.token}')" style="width: 100%; padding: 10px; background: #047857; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            <i class="fas fa-copy"></i> Copiar Token
+                        </button>
+                    </div>
+
+                    <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                        <p style="margin: 0; color: #92400e; font-size: 13px;">
+                            <i class="fas fa-info-circle"></i>
+                            <strong>Nota:</strong> El cliente recibirá el token por WhatsApp. Puede compartirlo si lo desea.
+                        </p>
+                    </div>
+
+                    <button onclick="cerrarModalToken()" style="width: 100%; padding: 12px; background: #047857; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                        Cerrar
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.insertAdjacentHTML('beforeend', modal);
+    }
+
+    function copiarTokenModal(token) {
+        navigator.clipboard.writeText(token).then(() => {
+            mostrarAlerta('Token copiado al portapapeles', 'success');
+        });
+    }
+
+    function cerrarModalToken() {
+        const modal = document.getElementById('modal-token');
+        if (modal) {
+            modal.remove();
+        }
+    }
+
+    function verHistorial(clienteId) {
+        window.location.href = `/institution/clientes/${clienteId}`;
+    }
+
+    function mostrarAlerta(mensaje, tipo) {
+        const alerta = document.createElement('div');
+        alerta.style.cssText = `
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            z-index: 10000;
+            animation: slideIn 0.3s ease-out;
+            ${tipo === 'success' 
+                ? 'background: #d1fae5; color: #065f46; border-left: 4px solid #10b981;' 
+                : 'background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626;'}
+        `;
+        alerta.textContent = mensaje;
+        document.body.appendChild(alerta);
+
+        setTimeout(() => {
+            alerta.style.animation = 'slideOut 0.3s ease-in';
+            setTimeout(() => alerta.remove(), 300);
+        }, 4000);
+    }
+
+    // Agregar animaciones
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideIn {
+            from {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes slideOut {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(400px);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 
     </script>
 @endsection

@@ -7,13 +7,14 @@ use App\Models\Client;
 use App\Models\ClientToken;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
-use Illuminate\Support\Str;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class ClientAuthController extends Controller
 {
     /**
-     * Generar token y enviar al cliente vía WhatsApp
+     * Generar token y enviar al cliente vía WhatsApp (Whatsurvey)
      */
     public function generateAndSendToken(Request $request, $id_cliente)
     {
@@ -31,7 +32,7 @@ class ClientAuthController extends Controller
 
         try {
             $client = Client::where('id_cliente', $id_cliente)
-                ->where('id_institucion', $request->user()->id_institucion)
+                ->where('id_institucion', auth('sanctum')->user()->id_institucion)
                 ->firstOrFail();
 
             // Buscar token pendiente y no expirado
@@ -41,9 +42,10 @@ class ClientAuthController extends Controller
                 ->first();
 
             if ($existingToken) {
-                // Enviar el mismo token pendiente y no generar uno nuevo
+                // Enviar el mismo token pendiente
                 $token = $existingToken->token;
                 $expiresAt = $existingToken->expires_at;
+                $wasRecentlyCreated = false;
             } else {
                 // Generar nuevo token
                 $token = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -55,31 +57,59 @@ class ClientAuthController extends Controller
                     'expires_at' => $expiresAt,
                     'used' => false,
                 ]);
+                $wasRecentlyCreated = true;
             }
 
-            $mensaje = "Tu código de acceso es: {$token}. Válido por 5 minutos.";
+            // Mensaje a enviar
+            $mensaje = "Tu código de acceso es: {$token}\nVálido por 5 minutos.";
 
-            // Enviar por Whatsurvey (adapta esta función después)
-            // $respuesta_ws = $this->sendWhatsAppToken($client->telefono, $mensaje);
+            // Enviar por WhatsApp usando Whatsurvey
+            $respuestaWhatsurvey = $this->sendWhatsAppViaWhatsurvey(
+                $client->telefono,
+                $mensaje
+            );
+
+            if (!$respuestaWhatsurvey['success']) {
+                Log::warning('Error al enviar WhatsApp', [
+                    'cliente' => $client->nombre,
+                    'telefono' => $client->telefono,
+                    'error' => $respuestaWhatsurvey['error']
+                ]);
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Error al enviar token por WhatsApp',
+                    'error' => $respuestaWhatsurvey['error']
+                ], 500);
+            }
+
+            Log::info('Token enviado exitosamente', [
+                'cliente_id' => $client->id_cliente,
+                'telefono' => $client->telefono
+            ]);
 
             return response()->json([
                 'success' => true,
-                'message' => $existingToken->wasRecentlyCreated
+                'message' => $wasRecentlyCreated
                     ? 'Token generado y enviado exitosamente al cliente'
                     : 'Ya existe un token válido pendiente, se reenvió el mismo',
                 'data' => [
-                    'id_token' => $existingToken->id_token,
+                    'id_token' => $existingToken->id,
                     'id_cliente' => $existingToken->id_cliente,
                     'cliente_nombre' => $client->nombre,
                     'cliente_telefono' => $client->telefono,
                     'token' => $token,
-                    'expires_at' => $expiresAt,
+                    'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
                     'message' => $mensaje,
-                    // 'respuesta_whatsurvey' => $respuesta_ws,
+                    'whatsurvey_status' => $respuestaWhatsurvey['data']['message'] ?? 'Enviado'
                 ]
             ], 201);
-
         } catch (\Exception $e) {
+            Log::error('Error al generar token', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al generar o enviar token',
@@ -89,7 +119,7 @@ class ClientAuthController extends Controller
     }
 
     /**
-     * Validar token y autenticar cliente
+     * Validar token e iniciar sesión del cliente
      */
     public function validateToken(Request $request)
     {
@@ -119,6 +149,11 @@ class ClientAuthController extends Controller
                 ->first();
 
             if (!$clientToken) {
+                Log::warning('Intento de login con token inválido', [
+                    'cliente_id' => $request->id_cliente,
+                    'token_ingresado' => substr($request->token, 0, 3) . '***'
+                ]);
+
                 return response()->json([
                     'success' => false,
                     'message' => 'Token inválido, expirado o ya utilizado',
@@ -131,8 +166,13 @@ class ClientAuthController extends Controller
                 'used_at' => Carbon::now()
             ]);
 
-            // Generar token de sesión con Sanctum
+            // Generar token de sesión con Sanctum para cliente
             $authToken = $client->createToken('client_auth')->plainTextToken;
+
+            Log::info('Cliente autenticado exitosamente', [
+                'cliente_id' => $client->id_cliente,
+                'nombre' => $client->nombre
+            ]);
 
             return response()->json([
                 'success' => true,
@@ -148,8 +188,11 @@ class ClientAuthController extends Controller
                     'token_type' => 'Bearer',
                 ]
             ], 200);
-
         } catch (\Exception $e) {
+            Log::error('Error en validación de token', [
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error en autenticación',
@@ -164,19 +207,31 @@ class ClientAuthController extends Controller
     public function myDebts(Request $request)
     {
         try {
-            // Obtener cliente desde el token
-            $client = $request->user();
+            $client = $request->user('sanctum');
+
+            if (!$client) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No autenticado'
+                ], 401);
+            }
 
             // Obtener deudas del cliente
-            $debts = $client->cuentasPorCobrar()
+            $debts = Client::find($client->id_cliente)
+                ->cuentasPorCobrar()
                 ->orderBy('fecha_vencimiento', 'asc')
                 ->get();
 
+            $totalDebts = $debts->count();
+            $totalPendiente = $debts->where('estado', 'Pendiente')->sum('monto');
+            $totalVencidas = $debts->where('estado', 'Vencida')->sum('monto');
+            $totalPagadas = $debts->where('estado', 'Pagada')->sum('monto');
+
             $summary = [
-                'total_deudas' => $debts->count(),
-                'total_pendiente' => $debts->where('estado', 'Pendiente')->sum('monto'),
-                'total_vencidas' => $debts->where('estado', 'Vencida')->sum('monto'),
-                'total_pagadas' => $debts->where('estado', 'Pagada')->sum('monto'),
+                'total_deudas' => $totalDebts,
+                'total_pendiente' => $totalPendiente,
+                'total_vencidas' => $totalVencidas,
+                'total_pagadas' => $totalPagadas,
             ];
 
             return response()->json([
@@ -187,13 +242,156 @@ class ClientAuthController extends Controller
                     'debts' => $debts,
                 ]
             ], 200);
-
         } catch (\Exception $e) {
+            Log::error('Error al obtener deudas', [
+                'error' => $e->getMessage()
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al obtener deudas',
                 'error'   => $e->getMessage()
             ], 500);
+        }
+    }
+
+    /**
+     * Enviar mensaje por WhatsApp usando API de Whatsurvey
+     * 
+     * Configuración necesaria en .env:
+     * WHATSURVEY_API_URL=https://api.whatsurvey.mx
+     * WHATSURVEY_API_KEY=tu_api_key
+     * WHATSURVEY_SESSION_NAME=nombre-de-la-sesion
+     */
+    private function sendWhatsAppViaWhatsurvey($telefono, $mensaje)
+    {
+        try {
+            // Añadimos /messages al final de la URL base
+            $apiUrl = env('WHATSURVEY_API_URL', 'https://whatsurvey.mx/api');
+            $apiToken = env('WHATSURVEY_API_TOKEN');
+            $sessionName = env('WHATSURVEY_API_SESSION_NAME', 'default');
+
+            //Imprimir la apiUrl utilizada
+            Log::info('API URL de Whatsurvey utilizada', [
+                'apiUrl' => $apiUrl
+            ]);
+
+            if (!$apiToken) {
+                return [
+                    'success' => false,
+                    'error' => 'WHATSURVEY_API_TOKEN no configurada'
+                ];
+            }
+
+            // Formatear teléfono para WhatsApp (México)
+            $chatId = $this->formatPhoneForWhatsApp($telefono);
+
+            if (!$chatId) {
+                return [
+                    'success' => false,
+                    'error' => 'Formato de teléfono inválido'
+                ];
+            }
+
+            Log::info('Enviando mensaje por Whatsurvey', [
+                'telefono_original' => $telefono,
+                'chatId' => $chatId,
+                'session' => $sessionName
+            ]);
+
+            // Realizar petición a Whatsurvey
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $apiToken,
+                    'Content-Type' => 'application/json',
+                ])
+                ->post("{$apiUrl}/messages", [
+                    'sessionName' => $sessionName,
+                    'chatId' => $chatId,
+                    'text' => $mensaje,
+                ]);
+
+            Log::info('Respuesta de Whatsurvey', [
+                'status' => $response->status(),
+                'body' => $response->body()
+            ]);
+
+            if ($response->successful()) {
+                $data = $response->json();
+                return [
+                    'success' => $data['ok'] ?? false,
+                    'data' => $data
+                ];
+            } else {
+                $errorData = $response->json();
+                return [
+                    'success' => false,
+                    'error' => $errorData['message'] ?? 'Error al enviar mensaje: ' . $response->status()
+                ];
+            }
+        } catch (\Exception $e) {
+            Log::error('Exception en Whatsurvey', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
+     * Formatear teléfono al formato WhatsApp para MÉXICO
+     * Ejemplos:
+     * Siempre empezando con 521
+     * 5512345678 -> 525512345678@c.us
+     * 12345678 -> 5212345678@c.us
+     * 05512345678 -> 525512345678@c.us
+     */
+    private function formatPhoneForWhatsApp($telefono)
+    {
+        try {
+            // Remover caracteres especiales
+            $telefono = preg_replace('/[^0-9]/', '', $telefono);
+
+            // Si comienza con 0, quitar el 0
+            if (substr($telefono, 0, 1) === '0') {
+                $telefono = substr($telefono, 1);
+            }
+
+            // Si tiene 10 dígitos (número local), agregar código país 52
+            if (strlen($telefono) === 10) {
+                $telefono = '521' . $telefono;
+            }
+
+            // Si tiene 11 dígitos, probablemente ya incluye el 52 parcial
+            elseif (strlen($telefono) === 11) {
+                $telefono = '521' . $telefono;
+            }
+
+            // Si ya tiene 12 dígitos (52 + 10 dígitos), dejar como está y agregar un 1
+            elseif (strlen($telefono) !== 12) {
+                Log::warning('Teléfono con longitud no válida para México', [
+                    'telefono_procesado' => $telefono,
+                    'longitud' => strlen($telefono)
+                ]);
+                return null;
+            }
+
+            // Agregar un 1 después del código de país si no está presente
+            if (strlen($telefono) === 12 && substr($telefono, 3, 1) !== '1') {
+                $telefono = substr($telefono, 0, 3) . '1' . substr($telefono, 3);
+            }
+
+            // Formato final para WhatsApp
+            return $telefono . '@c.us';
+        } catch (\Exception $e) {
+            Log::error('Error al formatear teléfono', [
+                'error' => $e->getMessage()
+            ]);
+            return null;
         }
     }
 }

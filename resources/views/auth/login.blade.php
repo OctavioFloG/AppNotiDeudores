@@ -416,49 +416,56 @@
             </div>
         </div>
     </div>
+    <script>
+        const originalFetch = window.fetch;
+        window.fetch = function (...args) {
+            const token = localStorage.getItem('token');
+
+            if (token) {
+                let options = args[1] || {};
+                options.headers = options.headers || {};
+                options.headers['Authorization'] = `Bearer ${token}`;
+                args[1] = options;
+            }
+
+            return originalFetch.apply(this, args);
+        };
+    </script>
+
 @endsection
 
 @section('scripts')
     <script>
-        // Verificar si ya está autenticado
+        // Verificar si ya está autenticado (SOLO al cargar la página, sin verificar con API)
         document.addEventListener('DOMContentLoaded', function () {
             const token = localStorage.getItem('token');
+            const usuarioJSON = localStorage.getItem('usuario');
 
-            // Solo verificar si hay token
-            if (token) {
-                verificarTokenYRedirigir(token);
+            // Solo verificar si hay AMBOS: token Y usuario guardados
+            if (token && usuarioJSON) {
+                try {
+                    const usuario = JSON.parse(usuarioJSON);
+
+                    // Determinar redirección según el rol guardado
+                    let redirectUrl = '/';
+
+                    if (usuario.rol === 'administrador') {
+                        console.log('Redirigiendo a administrador');
+                        redirectUrl = '/admin/dashboard';
+                    } else if (usuario.rol === 'institucion') {
+                        redirectUrl = '/institution/dashboard';
+                    }
+
+                    // Redirigir sin hacer otra petición a la API
+                    window.location.replace(redirectUrl);
+                } catch (e) {
+                    console.error('Error parsing usuario:', e);
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('usuario');
+                }
             }
         });
 
-        function verificarTokenYRedirigir(token) {
-            fetch('/api/auth/me', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'Content-Type': 'application/json'
-                }
-            })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success && data.data) {
-                        const user = data.data.user;
-                        // Si user.rol == "institucion" entonces redirigir a dashboard institución
-                        const redirectUrl = user.rol === 'institucion'
-                            ? '/institution/dashboard'
-                            : '/admin/dashboard';
-
-                        // Redirigir
-                        window.location.replace(redirectUrl);
-                    } else {
-                        // Token inválido
-                        localStorage.removeItem('token');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    localStorage.removeItem('token');
-                });
-        }
 
         document.getElementById('loginForm').addEventListener('submit', async function (e) {
             e.preventDefault();
@@ -577,9 +584,9 @@
 
             const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
             alert.innerHTML = `
-                <i class="fas ${icon}"></i>
-                <span>${mensaje}</span>
-            `;
+                    <i class="fas ${icon}"></i>
+                    <span>${mensaje}</span>
+                `;
 
             container.appendChild(alert);
 
