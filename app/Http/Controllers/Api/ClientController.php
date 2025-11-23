@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Client;
+use App\Models\CuentaPorCobrar;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -178,9 +179,32 @@ class ClientController extends Controller
                 ->where('id_institucion', $request->user()->id_institucion)
                 ->firstOrFail();
 
+            // Obtener deudas del cliente
+            $deudas = CuentaPorCobrar::where('id_cliente', $id)
+                ->with('institution')
+                ->orderBy('fecha_vencimiento', 'asc')
+                ->get();
+
+            // Calcular estadísticas
+            $totalDeudas = $deudas->count();
+            $montoTotal = $deudas->sum('monto');
+            $deudasVencidas = $deudas->where('estado', 'Vencida')->count();
+            $montoVencido = $deudas->where('estado', 'Vencida')->sum('monto');
+            $deudasPagadas = $deudas->where('estado', 'Pagada')->count();
+
             return response()->json([
                 'success' => true,
-                'data' => $client
+                'data' => [
+                    'cliente' => $client,
+                    'deudas' => $deudas,
+                    'resumen' => [
+                        'total_deudas' => $totalDeudas,
+                        'monto_total' => $montoTotal,
+                        'deudas_vencidas' => $deudasVencidas,
+                        'monto_vencido' => $montoVencido,
+                        'deudas_pagadas' => $deudasPagadas,
+                    ]
+                ]
             ], 200);
         } catch (\Exception $e) {
             return response()->json([
@@ -190,6 +214,7 @@ class ClientController extends Controller
             ], 404);
         }
     }
+
 
     /**
      * Actualizar cliente

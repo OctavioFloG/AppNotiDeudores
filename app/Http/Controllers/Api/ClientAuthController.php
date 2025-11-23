@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Client;
 use App\Models\ClientToken;
+use App\Models\Notificacion;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use Carbon\Carbon;
@@ -63,10 +64,12 @@ class ClientAuthController extends Controller
             // Mensaje a enviar
             $mensaje = "Tu código de acceso es: {$token}\nVálido por 5 minutos.";
 
-            // Enviar por WhatsApp usando Whatsurvey
-            $respuestaWhatsurvey = $this->sendWhatsAppViaWhatsurvey(
-                $client->telefono,
-                $mensaje
+            // Enviar por WhatsApp y guardar notificación
+            $respuestaWhatsurvey = $this->enviarNotificacionWhatsApp(
+                $client,
+                $mensaje,
+                'Código de acceso',
+                'token_acceso'
             );
 
             if (!$respuestaWhatsurvey['success']) {
@@ -85,7 +88,8 @@ class ClientAuthController extends Controller
 
             Log::info('Token enviado exitosamente', [
                 'cliente_id' => $client->id_cliente,
-                'telefono' => $client->telefono
+                'telefono' => $client->telefono,
+                'notificacion_id' => $respuestaWhatsurvey['notificacion_id']
             ]);
 
             return response()->json([
@@ -101,6 +105,7 @@ class ClientAuthController extends Controller
                     'token' => $token,
                     'expires_at' => $expiresAt->format('Y-m-d H:i:s'),
                     'message' => $mensaje,
+                    'notificacion_id' => $respuestaWhatsurvey['notificacion_id'],
                     'whatsurvey_status' => $respuestaWhatsurvey['data']['message'] ?? 'Enviado'
                 ]
             ], 201);
@@ -256,22 +261,72 @@ class ClientAuthController extends Controller
     }
 
     /**
+     * Enviar notificación por WhatsApp y guardarla en BD
+     */
+    private function enviarNotificacionWhatsApp($client, $mensaje, $asunto = null, $tipo_notificacion = 'automatica')
+    {
+        try {
+            // 1. Enviar por WhatsApp via Whatsurvey
+            $respuestaWhatsurvey = $this->sendWhatsAppViaWhatsurvey($client->telefono, $mensaje);
+
+            if (!$respuestaWhatsurvey['success']) {
+                return [
+                    'success' => false,
+                    'error' => $respuestaWhatsurvey['error']
+                ];
+            }
+
+            // 2. Guardar en base de datos
+            $notificacion = Notificacion::create([
+                'id_institucion' => $client->id_institucion,
+                'id_cliente' => $client->id_cliente,
+                'tipo' => 'whatsapp',
+                'mensaje' => $mensaje,
+                'asunto' => $asunto ?? 'Notificación',
+                'destinatario' => $client->telefono,
+                'estado' => 'enviada',
+                'fecha_envio' => now()
+            ]);
+
+            Log::info('Notificación guardada', [
+                'notificacion_id' => $notificacion->id_notificacion,
+                'cliente_id' => $client->id_cliente,
+                'tipo' => $tipo_notificacion
+            ]);
+
+            return [
+                'success' => true,
+                'notificacion_id' => $notificacion->id_notificacion,
+                'data' => $respuestaWhatsurvey['data']
+            ];
+
+        } catch (\Exception $e) {
+            Log::error('Error al enviar notificación WhatsApp', [
+                'error' => $e->getMessage()
+            ]);
+
+            return [
+                'success' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+    }
+
+    /**
      * Enviar mensaje por WhatsApp usando API de Whatsurvey
      * 
      * Configuración necesaria en .env:
      * WHATSURVEY_API_URL=https://api.whatsurvey.mx
-     * WHATSURVEY_API_KEY=tu_api_key
-     * WHATSURVEY_SESSION_NAME=nombre-de-la-sesion
+     * WHATSURVEY_API_TOKEN=tu_api_token
+     * WHATSURVEY_API_SESSION_NAME=nombre-de-la-sesion
      */
     private function sendWhatsAppViaWhatsurvey($telefono, $mensaje)
     {
         try {
-            // Añadimos /messages al final de la URL base
             $apiUrl = env('WHATSURVEY_API_URL', 'https://whatsurvey.mx/api');
             $apiToken = env('WHATSURVEY_API_TOKEN');
             $sessionName = env('WHATSURVEY_API_SESSION_NAME', 'default');
 
-            //Imprimir la apiUrl utilizada
             Log::info('API URL de Whatsurvey utilizada', [
                 'apiUrl' => $apiUrl
             ]);
@@ -345,7 +400,6 @@ class ClientAuthController extends Controller
     /**
      * Formatear teléfono al formato WhatsApp para MÉXICO
      * Ejemplos:
-     * Siempre empezando con 521
      * 5512345678 -> 525512345678@c.us
      * 12345678 -> 5212345678@c.us
      * 05512345678 -> 525512345678@c.us
@@ -365,13 +419,11 @@ class ClientAuthController extends Controller
             if (strlen($telefono) === 10) {
                 $telefono = '521' . $telefono;
             }
-
             // Si tiene 11 dígitos, probablemente ya incluye el 52 parcial
             elseif (strlen($telefono) === 11) {
                 $telefono = '521' . $telefono;
             }
-
-            // Si ya tiene 12 dígitos (52 + 10 dígitos), dejar como está y agregar un 1
+            // Si ya tiene 12 dígitos (52 + 10 dígitos), validar
             elseif (strlen($telefono) !== 12) {
                 Log::warning('Teléfono con longitud no válida para México', [
                     'telefono_procesado' => $telefono,

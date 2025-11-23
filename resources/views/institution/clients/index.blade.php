@@ -48,7 +48,6 @@
             padding: 0 20px 30px 20px;
         }
 
-        /* Card Container */
         .content-card {
             background: white;
             border-radius: 12px;
@@ -56,7 +55,6 @@
             overflow: hidden;
         }
 
-        /* Header con búsqueda */
         .card-header {
             padding: 25px;
             border-bottom: 2px solid #f3f4f6;
@@ -162,7 +160,6 @@
             background: #e5e7eb;
         }
 
-        /* Table */
         .table-container {
             overflow-x: auto;
         }
@@ -212,7 +209,23 @@
             color: #6b7280;
         }
 
-        /* Acciones */
+        .debt-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #fef3c7 0%, #fee2e2 100%);
+            color: #92400e;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-align: center;
+            min-width: 40px;
+        }
+
+        .debt-badge.has-debts {
+            background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+            color: #991b1b;
+        }
+
         .actions {
             display: flex;
             gap: 8px;
@@ -267,8 +280,6 @@
             transform: none;
         }
 
-
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -291,7 +302,6 @@
             margin: 0 0 20px 0;
         }
 
-        /* Paginación */
         .pagination-container {
             padding: 25px;
             border-top: 2px solid #f3f4f6;
@@ -338,7 +348,6 @@
             cursor: not-allowed;
         }
 
-        /* Loading */
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -360,7 +369,6 @@
             }
         }
 
-        /* Alert */
         .alert {
             padding: 14px 16px;
             border-radius: 8px;
@@ -416,7 +424,6 @@
 @endsection
 
 @section('content')
-    <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
             <h1><i class="fas fa-users"></i> Mis Clientes</h1>
@@ -428,14 +435,10 @@
         </a>
     </div>
 
-    <!-- Main Container -->
     <div class="container-main">
-        <!-- Alertas -->
         <div id="messageContainer"></div>
 
-        <!-- Content Card -->
         <div class="content-card">
-            <!-- Header con búsqueda -->
             <div class="card-header">
                 <h2>
                     <i class="fas fa-list"></i>
@@ -453,7 +456,6 @@
                 </div>
             </div>
 
-            <!-- Contenido -->
             <div id="tableContainer">
                 <div class="loading">
                     <div class="spinner-border"></div>
@@ -466,7 +468,6 @@
 
 @section('scripts')
     <script>
-        // Verificar autenticación
         if (!localStorage.getItem('token')) {
             window.location.href = '/login';
         }
@@ -475,11 +476,9 @@
         let paginaActual = 1;
         const itemsPorPagina = 10;
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', function () {
             cargarClientes();
 
-            // Búsqueda en tiempo real
             document.getElementById('searchInput').addEventListener('input', function () {
                 paginaActual = 1;
                 mostrarTabla(1);
@@ -492,6 +491,12 @@
 
                 if (response.success) {
                     clientesCompletos = response.data || [];
+                    
+                    // Cargar deudas para cada cliente
+                    for (let cliente of clientesCompletos) {
+                        await cargarDemasCliente(cliente);
+                    }
+                    
                     mostrarTabla(1);
                 } else {
                     mostrarMensaje(response.message || 'Error al cargar clientes', 'error');
@@ -504,10 +509,27 @@
             }
         }
 
+        async function cargarDemasCliente(cliente) {
+            try {
+                const response = await API_CONFIG.call(`institution/clientes/${cliente.id_cliente}`, 'GET');
+                
+                if (response.success && response.data) {
+                    cliente.numero_deudas = response.data.deudas ? response.data.deudas.length : 0;
+                    cliente.monto_total_deudas = response.data.deudas ? 
+                        response.data.deudas.reduce((sum, d) => sum + (d.monto || 0), 0) : 0;
+                } else {
+                    cliente.numero_deudas = 0;
+                    cliente.monto_total_deudas = 0;
+                }
+            } catch (error) {
+                cliente.numero_deudas = 0;
+                cliente.monto_total_deudas = 0;
+            }
+        }
+
         function mostrarTabla(pagina) {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
-            // Filtrar clientes
             const clientesFiltrados = clientesCompletos.filter(cliente => {
                 const nombre = cliente.nombre.toLowerCase();
                 const telefono = cliente.telefono.toLowerCase();
@@ -523,13 +545,11 @@
                 return;
             }
 
-            // Calcular paginación
             const totalPaginas = Math.ceil(clientesFiltrados.length / itemsPorPagina);
             const inicio = (pagina - 1) * itemsPorPagina;
             const fin = inicio + itemsPorPagina;
             const clientesPagina = clientesFiltrados.slice(inicio, fin);
 
-            // Generar tabla
             let html = `
             <div class="table-container">
                 <table>
@@ -538,13 +558,17 @@
                             <th>Nombre</th>
                             <th>Teléfono</th>
                             <th>Correo</th>
+                            <th style="text-align: center;">Deudas</th>
                             <th style="text-align: center;">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                `;
+            `;
 
             clientesPagina.forEach(cliente => {
+                const numeroDeudas = cliente.numero_deudas || 0;
+                const badgeClass = numeroDeudas > 0 ? 'has-debts' : '';
+                
                 html += `
                         <tr>
                             <td>
@@ -555,20 +579,20 @@
                                 <div class="client-info">${cliente.correo}</div>
                             </td>
                             <td style="text-align: center;">
+                                <span class="debt-badge ${badgeClass}">${numeroDeudas}</span>
+                            </td>
+                            <td style="text-align: center;">
                                 <div class="actions" style="display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;">
-                                    <!-- Botón Enviar Token WhatsApp -->
-                                    <button class="action-btn action-send-token" onclick="enviarTokenWhatsApp(${cliente.id_cliente}, '${cliente.nombre}', '${cliente.telefono}')" title="Enviar token por WhatsApp">
+                                    <button class="action-btn action-send-token" onclick="enviarTokenWhatsApp(${cliente.id_cliente}, '${cliente.nombre}', '${cliente.telefono}')" title="Enviar notificación por WhatsApp">
                                         <i class="fas fa-paper-plane"></i>
-                                        Token
+                                        Notificar
                                     </button>
 
-                                    <!-- Botón Ver Historial -->
                                     <button class="action-btn action-view" onclick="verHistorial(${cliente.id_cliente})" title="Ver historial de deudas">
                                         <i class="fas fa-history"></i>
                                         Historial
                                     </button>
 
-                                    <!-- Botón Eliminar -->
                                     <button class="action-btn action-delete" onclick="eliminarCliente(${cliente.id_cliente}, '${cliente.nombre}')" title="Eliminar cliente">
                                         <i class="fas fa-trash"></i>
                                         Eliminar
@@ -576,7 +600,7 @@
                                 </div>
                             </td>
                         </tr>
-                    `;
+                `;
             });
 
             html += `
@@ -585,7 +609,6 @@
             </div>
             `;
 
-            // Agregar paginación
             if (totalPaginas > 1) {
                 html += `
                 <div class="pagination-container">
@@ -597,13 +620,13 @@
                             Anterior
                         </button>
                         <span style="padding: 0 12px; color: #6b7280; font-size: 13px;">
-                            Página ${pagina} de ${totalPaginas}
+                            Pagina ${pagina} de ${totalPaginas}
                         </span>
                         <button onclick="mostrarTabla(${pagina + 1})" ${pagina === totalPaginas ? 'disabled class="disabled"' : ''}>
                             Siguiente
                         </button>
                         <button onclick="mostrarTabla(${totalPaginas})" ${pagina === totalPaginas ? 'disabled class="disabled"' : ''}>
-                            Última <i class="fas fa-chevron-right"></i>
+                            Ultima <i class="fas fa-chevron-right"></i>
                         </button>
                     </div>
                 </div>
@@ -620,7 +643,7 @@
                         <i class="fas fa-inbox"></i>
                     </div>
                     <h3>Sin clientes</h3>
-                    <p>No hay clientes que coincidan con tu búsqueda</p>
+                    <p>No hay clientes que coincidan con tu busqueda</p>
                     <a href="/institution/clientes/crear" class="btn btn-primary">
                         <i class="fas fa-plus"></i>
                         Crear primer cliente
@@ -629,15 +652,8 @@
                 `;
         }
 
-        function verCliente(id) {
-            // Por ahora, podrías ir a una página de detalles
-            console.log('Ver cliente:', id);
-            // window.location.href = '/institution/clientes/' + id;
-        }
-
         function eliminarCliente(id, nombre) {
             if (confirm(`¿Estás seguro que deseas eliminar a ${nombre}?`)) {
-                // Implementar eliminación
                 console.log('Eliminar cliente:', id);
             }
         }
@@ -666,153 +682,141 @@
         }
 
         async function enviarTokenWhatsApp(clienteId, clienteNombre, clienteTelefono) {
-        // Mostrar confirmación
-        if (!confirm(`¿Enviar token de acceso a ${clienteNombre} (${clienteTelefono})?`)) {
-            return;
-        }
-
-        // Desactivar botón mientras se envía
-        const btn = event.target.closest('.action-send-token');
-        const btnText = btn.innerHTML;
-        btn.disabled = true;
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
-
-        try {
-            const response = await API_CONFIG.call(
-                `institution/clientes/${clienteId}/send-token`,
-                'POST'
-            );
-
-            if (response.success) {
-                // Mostrar modal con el token
-                mostrarModalToken(response.data);
-                mostrarAlerta(`Token enviado exitosamente a ${clienteNombre}`, 'success');
-            } else {
-                mostrarAlerta(response.message || 'Error al enviar token', 'error');
+            if (!confirm(`¿Enviar notificación de deudas a ${clienteNombre} (${clienteTelefono})?`)) {
+                return;
             }
-        } catch (error) {
-            console.error('Error:', error);
-            mostrarAlerta('Error de conexión', 'error');
-        } finally {
-            // Restaurar botón
-            btn.disabled = false;
-            btn.innerHTML = btnText;
+
+            const btn = event.target.closest('.action-send-token');
+            const btnText = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Enviando...';
+
+            try {
+                const response = await API_CONFIG.call(
+                    `enviar-deudas-link/${clienteId}`,
+                    'POST'
+                );
+
+                if (response.success) {
+                    mostrarModalNotificacion(response.data);
+                    mostrarAlerta(`Notificación enviada exitosamente a ${clienteNombre}`, 'success');
+                } else {
+                    mostrarAlerta(response.message || 'Error al enviar notificación', 'error');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = btnText;
+            }
         }
-    }
 
-    function mostrarModalToken(data) {
-        const modal = `
-            <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="modal-token">
-                <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
-                    <div style="text-align: center; margin-bottom: 20px;">
-                        <i class="fas fa-check-circle" style="font-size: 48px; color: #10b981; margin-bottom: 15px;"></i>
-                        <h2 style="color: #1f2937; margin: 0;">Token Enviado</h2>
-                    </div>
-
-                    <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                        <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Información del Envío</div>
-                        <p style="margin: 8px 0; color: #1f2937;"><strong>Cliente:</strong> ${data.cliente_nombre}</p>
-                        <p style="margin: 8px 0; color: #1f2937;"><strong>Teléfono:</strong> ${data.cliente_telefono}</p>
-                        <p style="margin: 8px 0; color: #1f2937;"><strong>Estado:</strong> ✓ Enviado por WhatsApp</p>
-                    </div>
-
-                    <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%); border: 2px solid #047857; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                        <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">Token Generado</div>
-                        <div style="font-size: 48px; font-weight: 700; color: #047857; font-family: 'Courier New', monospace; letter-spacing: 8px; text-align: center; margin: 15px 0;">
-                            ${data.token}
+        function mostrarModalNotificacion(data) {
+            const modal = `
+                <div style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 9999;" id="modal-notificacion">
+                    <div style="background: white; border-radius: 12px; padding: 30px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                        <div style="text-align: center; margin-bottom: 20px;">
+                            <i class="fas fa-check-circle" style="font-size: 48px; color: #10b981; margin-bottom: 15px;"></i>
+                            <h2 style="color: #1f2937; margin: 0;">Notificación Enviada</h2>
                         </div>
-                        <div style="font-size: 13px; color: #6b7280; text-align: center; margin-bottom: 10px;">
-                            Válido por 5 minutos
+
+                        <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 8px;">Información del Envío</div>
+                            <p style="margin: 8px 0; color: #1f2937;"><strong>Cliente:</strong> ${data.cliente_nombre}</p>
+                            <p style="margin: 8px 0; color: #1f2937;"><strong>Telefono:</strong> ${data.cliente_telefono}</p>
+                            <p style="margin: 8px 0; color: #1f2937;"><strong>Deudas:</strong> ${data.total_deudas}</p>
+                            <p style="margin: 8px 0; color: #1f2937;"><strong>Monto Total:</strong> $${data.monto_total.toLocaleString('es-MX', { minimumFractionDigits: 2 })}</p>
                         </div>
-                        <button onclick="copiarTokenModal('${data.token}')" style="width: 100%; padding: 10px; background: #047857; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                            <i class="fas fa-copy"></i> Copiar Token
+
+                        <div style="background: linear-gradient(135deg, #f0fdf4 0%, #dbeafe 100%); border: 2px solid #047857; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <div style="font-size: 12px; color: #6b7280; text-transform: uppercase; font-weight: 600; margin-bottom: 10px;">Link de Acceso</div>
+                            <div style="background: white; padding: 12px; border-radius: 8px; word-break: break-all; font-family: 'Courier New', monospace; font-size: 11px; color: #047857; margin-bottom: 10px; max-height: 60px; overflow-y: auto;">
+                                ${data.link}
+                            </div>
+                            <button onclick="copiarLinkModal('${data.link}')" style="width: 100%; padding: 10px; background: #047857; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                                <i class="fas fa-copy"></i> Copiar Link
+                            </button>
+                        </div>
+
+                        <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
+                            <p style="margin: 0; color: #92400e; font-size: 13px;">
+                                <i class="fas fa-info-circle"></i>
+                                <strong>Nota:</strong> El cliente recibió un mensaje por WhatsApp con el link directo para ver sus deudas. El link expira en 5 minutos.
+                            </p>
+                        </div>
+
+                        <button onclick="cerrarModalNotificacion()" style="width: 100%; padding: 12px; background: #047857; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
+                            Cerrar
                         </button>
                     </div>
-
-                    <div style="background: #fffbeb; border-left: 4px solid #f59e0b; padding: 15px; border-radius: 6px; margin-bottom: 20px;">
-                        <p style="margin: 0; color: #92400e; font-size: 13px;">
-                            <i class="fas fa-info-circle"></i>
-                            <strong>Nota:</strong> El cliente recibirá el token por WhatsApp. Puede compartirlo si lo desea.
-                        </p>
-                    </div>
-
-                    <button onclick="cerrarModalToken()" style="width: 100%; padding: 12px; background: #047857; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 14px;">
-                        Cerrar
-                    </button>
                 </div>
-            </div>
+            `;
+
+            document.body.insertAdjacentHTML('beforeend', modal);
+        }
+
+        function copiarLinkModal(link) {
+            navigator.clipboard.writeText(link).then(() => {
+                mostrarAlerta('Link copiado al portapapeles', 'success');
+            });
+        }
+
+        function cerrarModalNotificacion() {
+            const modal = document.getElementById('modal-notificacion');
+            if (modal) {
+                modal.remove();
+            }
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            const alerta = document.createElement('div');
+            alerta.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 15px 20px;
+                border-radius: 8px;
+                font-weight: 600;
+                z-index: 10000;
+                animation: slideIn 0.3s ease-out;
+                ${tipo === 'success' 
+                    ? 'background: #d1fae5; color: #065f46; border-left: 4px solid #10b981;' 
+                    : 'background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626;'}
+            `;
+            alerta.textContent = mensaje;
+            document.body.appendChild(alerta);
+
+            setTimeout(() => {
+                alerta.style.animation = 'slideOut 0.3s ease-in';
+                setTimeout(() => alerta.remove(), 300);
+            }, 4000);
+        }
+
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
         `;
-
-        document.body.insertAdjacentHTML('beforeend', modal);
-    }
-
-    function copiarTokenModal(token) {
-        navigator.clipboard.writeText(token).then(() => {
-            mostrarAlerta('Token copiado al portapapeles', 'success');
-        });
-    }
-
-    function cerrarModalToken() {
-        const modal = document.getElementById('modal-token');
-        if (modal) {
-            modal.remove();
-        }
-    }
-
-    function verHistorial(clienteId) {
-        window.location.href = `/institution/clientes/${clienteId}`;
-    }
-
-    function mostrarAlerta(mensaje, tipo) {
-        const alerta = document.createElement('div');
-        alerta.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 15px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            z-index: 10000;
-            animation: slideIn 0.3s ease-out;
-            ${tipo === 'success' 
-                ? 'background: #d1fae5; color: #065f46; border-left: 4px solid #10b981;' 
-                : 'background: #fee2e2; color: #991b1b; border-left: 4px solid #dc2626;'}
-        `;
-        alerta.textContent = mensaje;
-        document.body.appendChild(alerta);
-
-        setTimeout(() => {
-            alerta.style.animation = 'slideOut 0.3s ease-in';
-            setTimeout(() => alerta.remove(), 300);
-        }, 4000);
-    }
-
-    // Agregar animaciones
-    const style = document.createElement('style');
-    style.textContent = `
-        @keyframes slideIn {
-            from {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-            to {
-                transform: translateX(0);
-                opacity: 1;
-            }
-        }
-
-        @keyframes slideOut {
-            from {
-                transform: translateX(0);
-                opacity: 1;
-            }
-            to {
-                transform: translateX(400px);
-                opacity: 0;
-            }
-        }
-    `;
-    document.head.appendChild(style);
-
+        document.head.appendChild(style);
     </script>
 @endsection

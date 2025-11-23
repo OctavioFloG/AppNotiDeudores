@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\DebtNotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\LoginController;
 use App\Http\Controllers\Web\AdminDashboardController;
@@ -12,6 +13,10 @@ Route::get('/', function () {
 
 Route::get('login', [LoginController::class, 'showLogin'])
     ->name('login');;
+
+// Ruta pública para ver deudas con token
+Route::get('/cliente/deudas/{token}', [DebtNotificationController::class, 'mostrarDeudaConToken'])
+    ->name('client.deudas.link');
 
 // ========= RUTAS PROTEGIDAS =========
 Route::middleware([\App\Http\Middleware\AuthToken::class])->group(function () {
@@ -27,7 +32,7 @@ Route::middleware([\App\Http\Middleware\AuthToken::class])->group(function () {
         // Clientes
         Route::get('clientes', [InstitutionDashboardController::class, 'clientes'])->name('institution.clientes.index');
         Route::get('clientes/crear', [InstitutionDashboardController::class, 'crearCliente'])->name('institution.clientes.create');
-        Route::get('clientes/{id}', [InstitutionDashboardController::class, 'Cliente'])->name('institution.clientes.show');
+        Route::get('clientes/{id}', [InstitutionDashboardController::class, 'verCliente'])->name('institution.clientes.show');
 
         // Deudas
         Route::get('deudas', [InstitutionDashboardController::class, 'deudas'])->name('institution.deudas.index');
