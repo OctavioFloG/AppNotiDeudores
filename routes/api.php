@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\CuentaPorCobrarController;
 use App\Http\Controllers\Api\ClientAuthController;
 use App\Http\Controllers\Api\DebtNotificationController;
 use App\Http\Controllers\Api\NotificacionController;
+use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\InstitutionDashboardController;
 use Illuminate\Support\Facades\Route;
@@ -47,6 +48,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('institution/clientes/{id_cliente}', [ClientController::class, 'show']);
     Route::put('institution/clientes/{id_cliente}', [ClientController::class, 'update']);
     Route::delete('institution/clientes/{id_cliente}', [ClientController::class, 'destroy']);
+    Route::get('institution/reporte-deudores', [ReportController::class, 'reporteDeudores']);
+    Route::get('institution/reporte-deudores/exportar-csv', [ReportController::class, 'exportarCSV']);
 
 
     // Generar token para cliente (desde panel institucion)

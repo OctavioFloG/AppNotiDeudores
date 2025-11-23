@@ -48,7 +48,6 @@
             padding: 0 20px 30px 20px;
         }
 
-        /* Card Container */
         .content-card {
             background: white;
             border-radius: 12px;
@@ -56,7 +55,6 @@
             overflow: hidden;
         }
 
-        /* Header con búsqueda */
         .card-header {
             padding: 25px;
             border-bottom: 2px solid #f3f4f6;
@@ -153,7 +151,100 @@
             box-shadow: 0 6px 20px rgba(4, 120, 87, 0.4);
         }
 
-        /* Table */
+        .btn-export {
+            background: #10b981;
+            color: white;
+            padding: 10px 16px;
+            font-size: 12px;
+        }
+
+        .btn-export:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        .btn-export-pdf {
+            background: #dc2626;
+        }
+
+        .btn-export-pdf:hover {
+            background: #b91c1c;
+        }
+
+        .filtros-section {
+            padding: 20px 25px;
+            background: #f9fafb;
+            border-bottom: 1px solid #e5e7eb;
+            display: none;
+        }
+
+        .filtros-section.show {
+            display: block;
+        }
+
+        .filtros-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .filtro-grupo {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filtro-grupo label {
+            font-weight: 600;
+            font-size: 12px;
+            color: #6b7280;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .filtro-grupo select,
+        .filtro-grupo input {
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .filtros-acciones {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-filtrar {
+            background: #047857;
+            color: white;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-filtrar:hover {
+            background: #065f46;
+        }
+
+        .btn-limpiar {
+            background: #f3f4f6;
+            color: #1f2937;
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .btn-limpiar:hover {
+            background: #e5e7eb;
+        }
+
         .table-container {
             overflow-x: auto;
         }
@@ -203,7 +294,6 @@
             color: #1f2937;
         }
 
-        /* Badges */
         .badge {
             display: inline-block;
             padding: 6px 12px;
@@ -227,7 +317,6 @@
             color: #991b1b;
         }
 
-        /* Acciones */
         .actions {
             display: flex;
             gap: 8px;
@@ -262,7 +351,6 @@
             cursor: not-allowed;
         }
 
-        /* Empty State */
         .empty-state {
             text-align: center;
             padding: 60px 20px;
@@ -285,7 +373,6 @@
             margin: 0 0 20px 0;
         }
 
-        /* Loading */
         .loading {
             text-align: center;
             padding: 60px 20px;
@@ -307,7 +394,6 @@
             }
         }
 
-        /* Modal */
         .modal {
             display: none;
             position: fixed;
@@ -340,7 +426,6 @@
                 opacity: 0;
                 transform: translateY(-30px);
             }
-
             to {
                 opacity: 1;
                 transform: translateY(0);
@@ -416,7 +501,6 @@
             background: #e5e7eb;
         }
 
-        /* Alert */
         .alert {
             padding: 14px 16px;
             border-radius: 8px;
@@ -478,44 +562,74 @@
 @endsection
 
 @section('content')
-    <!-- Page Header -->
     <div class="page-header">
         <div class="page-header-left">
-            <h1><i class="fas fa-file-invoice-dollar"></i> Mis Deudas</h1>
+            <h1>Mis Deudas</h1>
             <p>Gestiona todas las cuentas por cobrar</p>
         </div>
 
         <a href="/institution/dashboard" class="btn btn-nav">
-            <i class="fas fa-arrow-left"></i> Regresar
+            Regresar
         </a>
     </div>
 
-    <!-- Main Container -->
     <div class="container-main">
-        <!-- Alertas -->
         <div id="messageContainer"></div>
 
-        <!-- Content Card -->
         <div class="content-card">
-            <!-- Header con búsqueda -->
             <div class="card-header">
                 <h2>
-                    <i class="fas fa-list"></i>
                     Lista de Deudas
                 </h2>
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" id="searchInput" placeholder="Buscar por cliente, descripción...">
+                    <input type="text" id="searchInput" placeholder="Buscar por cliente, descripcion...">
                 </div>
                 <div class="header-actions">
+                    <button class="btn btn-export" onclick="toggleFiltros()">
+                        Filtros
+                    </button>
+                    <button class="btn btn-export" onclick="exportarCSV()">
+                        CSV
+                    </button>
+                    <button class="btn btn-export btn-export-pdf" onclick="exportarPDF()">
+                        PDF
+                    </button>
                     <a href="/institution/deudas/crear" class="btn btn-primary">
-                        <i class="fas fa-plus"></i>
-                        <span>Nueva Deuda</span>
+                        Nueva Deuda
                     </a>
                 </div>
             </div>
 
-            <!-- Contenido -->
+            <div class="filtros-section" id="filtrosSection">
+                <div class="filtros-grid">
+                    <div class="filtro-grupo">
+                        <label>Estado</label>
+                        <select id="filtroEstado">
+                            <option value="">Todos</option>
+                            <option value="pendiente">Pendiente</option>
+                            <option value="vencida">Vencida</option>
+                            <option value="pagada">Pagada</option>
+                        </select>
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label>Fecha Desde</label>
+                        <input type="date" id="filtroFechaDesde">
+                    </div>
+
+                    <div class="filtro-grupo">
+                        <label>Fecha Hasta</label>
+                        <input type="date" id="filtroFechaHasta">
+                    </div>
+                </div>
+
+                <div class="filtros-acciones">
+                    <button class="btn-filtrar" onclick="aplicarFiltros()">Aplicar Filtros</button>
+                    <button class="btn-limpiar" onclick="limpiarFiltros()">Limpiar</button>
+                </div>
+            </div>
+
             <div id="tableContainer">
                 <div class="loading">
                     <div class="spinner-border"></div>
@@ -525,11 +639,10 @@
         </div>
     </div>
 
-    <!-- Modal para marcar como pagada -->
     <div class="modal" id="payModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3><i class="fas fa-check-circle"></i> Marcar como Pagada</h3>
+                <h3>Marcar como Pagada</h3>
             </div>
             <div class="modal-body">
                 <div class="info-group">
@@ -541,7 +654,7 @@
                     <span id="modalAmount"></span>
                 </div>
                 <div class="info-group">
-                    <label>Descripción</label>
+                    <label>Descripcion</label>
                     <span id="modalDescription"></span>
                 </div>
             </div>
@@ -556,16 +669,13 @@
         </div>
     </div>
 
-    <!-- Modal para detalles del cliente -->
-    <div class="modal" id="detailModal">
-        <!-- El contenido se carga dinámicamente -->
-    </div>
+    <div class="modal" id="detailModal"></div>
 
 @endsection
 
 @section('scripts')
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
-        // Verificar autenticación
         if (!localStorage.getItem('token')) {
             window.location.href = '/login';
         }
@@ -573,16 +683,13 @@
         let deudasCompletas = [];
         let deudaSeleccionada = null;
 
-        // Inicializar
         document.addEventListener('DOMContentLoaded', function () {
             cargarDeudas();
 
-            // Búsqueda en tiempo real
             document.getElementById('searchInput').addEventListener('input', function () {
                 mostrarTabla();
             });
 
-            // Cerrar modal al hacer click fuera
             document.getElementById('payModal').addEventListener('click', function (e) {
                 if (e.target === this) {
                     cerrarModal();
@@ -596,9 +703,31 @@
             });
         });
 
+        function toggleFiltros() {
+            document.getElementById('filtrosSection').classList.toggle('show');
+        }
+
+        function obtenerParametrosFiltros() {
+            const params = new URLSearchParams();
+            const estado = document.getElementById('filtroEstado').value;
+            const fechaDesde = document.getElementById('filtroFechaDesde').value;
+            const fechaHasta = document.getElementById('filtroFechaHasta').value;
+
+            if (estado) params.append('estado', estado);
+            if (fechaDesde) params.append('fecha_desde', fechaDesde);
+            if (fechaHasta) params.append('fecha_hasta', fechaHasta);
+
+            return params.toString();
+        }
+
         async function cargarDeudas() {
             try {
-                const response = await API_CONFIG.call('institution/deudas', 'GET');
+                const parametros = obtenerParametrosFiltros();
+                const endpoint = parametros ? 
+                    `institution/deudas?${parametros}` : 
+                    'institution/deudas';
+
+                const response = await API_CONFIG.call(endpoint, 'GET');
 
                 if (response.success) {
                     deudasCompletas = response.data || [];
@@ -609,7 +738,7 @@
                 }
             } catch (error) {
                 console.error('Error:', error);
-                mostrarMensaje('Error de conexión', 'error');
+                mostrarMensaje('Error de conexion', 'error');
                 mostrarContenidoVacio();
             }
         }
@@ -617,7 +746,6 @@
         function mostrarTabla() {
             const searchTerm = document.getElementById('searchInput').value.toLowerCase();
 
-            // Filtrar deudas
             const deudasFiltradas = deudasCompletas.filter(deuda => {
                 const cliente = deuda.client?.nombre?.toLowerCase() || '';
                 const descripcion = deuda.descripcion?.toLowerCase() || '';
@@ -630,63 +758,61 @@
                 return;
             }
 
-            // Generar tabla
             let html = `
-                                        <div class="table-container">
-                                            <table>
-                                                <thead>
-                                                    <tr>
-                                                        <th>Cliente</th>
-                                                        <th>Descripción</th>
-                                                        <th>Monto</th>
-                                                        <th>Fecha Vencimiento</th>
-                                                        <th>Estado</th>
-                                                        <th style="text-align: center;">Acciones</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                    `;
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Cliente</th>
+                                <th>Descripcion</th>
+                                <th>Monto</th>
+                                <th>Fecha Vencimiento</th>
+                                <th>Estado</th>
+                                <th style="text-align: center;">Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
 
             deudasFiltradas.forEach(deuda => {
                 const estado = getEstadoBadge(deuda.estado, deuda.fecha_vencimiento);
-                const puedeMarcarPago = deuda.estado !== 'pagada';
-                const monto = parseFloat(deuda.monto).toLocaleString('es-CO', { minimumFractionDigits: 2 });
+                const puedeMarcarPago = deuda.estado.toLowerCase() !== 'pagada';
+                const monto = parseFloat(deuda.monto).toLocaleString('es-MX', { minimumFractionDigits: 2 });
                 const fechaVencimiento = formatDate(deuda.fecha_vencimiento);
                 const clienteNombre = deuda.client?.nombre || 'Sin cliente';
 
                 html += `
-                                            <tr>
-                                                <td>
-                                                    <div class="debt-client" style="cursor: pointer;" onclick="abrirModalDetalle(${deuda.id_cuenta})">
-                                                        ${clienteNombre}
-                                                    </div>
-                                                    <div style="font-size: 12px; color: #6b7280;">${deuda.client?.correo || ''}</div>
-                                                </td>
-                                                <td>${deuda.descripcion}</td>
-                                                <td>
-                                                    <span class="debt-amount">$${monto}</span>
-                                                </td>
-                                                <td>${fechaVencimiento}</td>
-                                                <td>${estado}</td>
-                                                <td style="text-align: center;">
-                                                    <div class="actions">
-                                                        <button class="action-btn action-pay" 
-                                                            onclick="abrirModal(${deuda.id_cuenta})"
-                                                            ${!puedeMarcarPago ? 'disabled' : ''}>
-                                                            <i class="fas fa-check"></i>
-                                                            Pagar
-                                                        </button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        `;
+                    <tr>
+                        <td>
+                            <div class="debt-client" style="cursor: pointer;" onclick="abrirModalDetalle(${deuda.id_cuenta})">
+                                ${clienteNombre}
+                            </div>
+                            <div style="font-size: 12px; color: #6b7280;">${deuda.client?.correo || ''}</div>
+                        </td>
+                        <td>${deuda.descripcion}</td>
+                        <td>
+                            <span class="debt-amount">$${monto}</span>
+                        </td>
+                        <td>${fechaVencimiento}</td>
+                        <td>${estado}</td>
+                        <td style="text-align: center;">
+                            <div class="actions">
+                                <button class="action-btn action-pay" 
+                                    onclick="abrirModal(${deuda.id_cuenta})"
+                                    ${!puedeMarcarPago ? 'disabled' : ''}>
+                                    Pagar
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
             });
 
             html += `
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    `;
+                        </tbody>
+                    </table>
+                </div>
+            `;
 
             document.getElementById('tableContainer').innerHTML = html;
         }
@@ -696,10 +822,10 @@
             const hoy = new Date();
             const fecha = new Date(fechaVencimiento);
 
-            if (estado === 'Pagada') {
+            if (estado.toLowerCase() === 'pagada') {
                 badge = '<span class="badge badge-pagada">Pagada</span>';
             } else if (fecha < hoy) {
-                badge = '<span class="badge badge-vencido">Vencido</span>';
+                badge = '<span class="badge badge-vencido">Vencida</span>';
             } else {
                 badge = '<span class="badge badge-pendiente">Pendiente</span>';
             }
@@ -712,55 +838,53 @@
             if (!deuda || !deuda.client) return;
 
             const cliente = deuda.client;
-            const monto = parseFloat(deuda.monto).toLocaleString('es-CO', { minimumFractionDigits: 2 });
-            const estado = deuda.estado === 'pagada' ? 'Pagada' : 'Pendiente';
+            const monto = parseFloat(deuda.monto).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+            const estado = deuda.estado.toLowerCase() === 'pagada' ? 'Pagada' : 'Pendiente';
 
             const html = `
-                                        <div class="modal-header">
-                                            <h3><i class="fas fa-user-info"></i> Información del Cliente</h3>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="info-group">
-                                                <label>Nombre</label>
-                                                <span>${cliente.nombre}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Correo</label>
-                                                <span>${cliente.correo}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Teléfono</label>
-                                                <span>${cliente.telefono}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Descripción de la Deuda</label>
-                                                <span>${deuda.descripcion}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Monto de la Deuda</label>
-                                                <span style="font-size: 18px; font-weight: 700; color: #047857;">$${monto}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Fecha de Emisión</label>
-                                                <span>${formatDate(deuda.fecha_emision)}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Fecha de Vencimiento</label>
-                                                <span>${formatDate(deuda.fecha_vencimiento)}</span>
-                                            </div>
-                                            <div class="info-group">
-                                                <label>Estado de Pago</label>
-                                                <span>${estado}</span>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer">
-                                            <button class="modal-btn modal-btn-cancel" onclick="cerrarModalDetalle()">
-                                                Cerrar
-                                            </button>
-                                        </div>
-                                    `;
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Informacion del Cliente</h3>
+                    </div>
+                    <div class="modal-body">
+                        <div class="info-group">
+                            <label>Nombre</label>
+                            <span>${cliente.nombre}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Correo</label>
+                            <span>${cliente.correo}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Telefono</label>
+                            <span>${cliente.telefono}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Descripcion de la Deuda</label>
+                            <span>${deuda.descripcion}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Monto de la Deuda</label>
+                            <span style="font-size: 18px; font-weight: 700; color: #047857;">$${monto}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Fecha de Vencimiento</label>
+                            <span>${formatDate(deuda.fecha_vencimiento)}</span>
+                        </div>
+                        <div class="info-group">
+                            <label>Estado de Pago</label>
+                            <span>${estado}</span>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button class="modal-btn modal-btn-cancel" onclick="cerrarModalDetalle()">
+                            Cerrar
+                        </button>
+                    </div>
+                </div>
+            `;
 
-            document.getElementById('detailModal').innerHTML = `<div class="modal-content">${html}</div>`;
+            document.getElementById('detailModal').innerHTML = html;
             document.getElementById('detailModal').classList.add('show');
         }
 
@@ -774,15 +898,12 @@
 
             deudaSeleccionada = deuda;
 
-            // Llenar datos del modal
             document.getElementById('modalClient').textContent = deuda.client?.nombre || 'N/A';
-            document.getElementById('modalAmount').textContent = `$${parseFloat(deuda.monto).toLocaleString('es-CO', { minimumFractionDigits: 2 })}`;
+            document.getElementById('modalAmount').textContent = `$${parseFloat(deuda.monto).toLocaleString('es-MX', { minimumFractionDigits: 2 })}`;
             document.getElementById('modalDescription').textContent = deuda.descripcion;
 
-            // Mostrar modal
             document.getElementById('payModal').classList.add('show');
 
-            // Asignar evento al botón de confirmación
             document.getElementById('confirmPayBtn').onclick = function () {
                 marcarComoPagada(deudaId);
             };
@@ -801,7 +922,6 @@
             btn.textContent = 'Procesando...';
 
             try {
-                // Llamar sin enviar datos
                 const response = await API_CONFIG.call(`institution/deudas/${deudaId}/pagar`, 'PUT', {});
 
                 btn.disabled = false;
@@ -817,25 +937,90 @@
                 btn.disabled = false;
                 btn.textContent = 'Confirmar Pago';
                 console.error('Error:', error);
-                mostrarMensaje('Error de conexión', 'error');
+                mostrarMensaje('Error de conexion', 'error');
+            }
+        }
+
+        function aplicarFiltros() {
+            cargarDeudas();
+        }
+
+        function limpiarFiltros() {
+            document.getElementById('filtroEstado').value = '';
+            document.getElementById('filtroFechaDesde').value = '';
+            document.getElementById('filtroFechaHasta').value = '';
+            cargarDeudas();
+        }
+
+        async function exportarCSV() {
+            try {
+                const parametros = obtenerParametrosFiltros();
+                const url = parametros ?
+                    `institution/reporte-deudores/exportar-csv?${parametros}` :
+                    'institution/reporte-deudores/exportar-csv';
+
+                const token = localStorage.getItem('token');
+                
+                const response = await fetch(`/api/${url}`, {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Accept': 'text/csv'
+                    }
+                });
+
+                if (!response.ok) {
+                    mostrarMensaje('Error al descargar CSV', 'error');
+                    return;
+                }
+
+                const blob = await response.blob();
+                const downloadUrl = window.URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = downloadUrl;
+                link.download = `reporte-deudores-${new Date().toLocaleDateString('es-MX')}.csv`;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                window.URL.revokeObjectURL(downloadUrl);
+            } catch (error) {
+                console.error('Error:', error);
+                mostrarMensaje('Error de conexion', 'error');
             }
         }
 
 
+        function exportarPDF() {
+            const tabla = document.querySelector('.table-container table');
+            if (!tabla) {
+                mostrarMensaje('No hay datos para exportar', 'error');
+                return;
+            }
+
+            const opcion = {
+                margin: 10,
+                filename: 'reporte-deudas-' + new Date().toLocaleDateString('es-MX') + '.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(opcion).from(tabla).save();
+        }
+
         function mostrarContenidoVacio() {
             document.getElementById('tableContainer').innerHTML = `
-                                        <div class="empty-state">
-                                            <div class="empty-state-icon">
-                                                <i class="fas fa-inbox"></i>
-                                            </div>
-                                            <h3>Sin deudas</h3>
-                                            <p>No hay deudas que coincidan con tu búsqueda</p>
-                                            <a href="/institution/deudas/crear" class="btn btn-primary">
-                                                <i class="fas fa-plus"></i>
-                                                Crear primera deuda
-                                            </a>
-                                        </div>
-                                    `;
+                <div class="empty-state">
+                    <div class="empty-state-icon">
+                        <i class="fas fa-inbox"></i>
+                    </div>
+                    <h3>Sin deudas</h3>
+                    <p>No hay deudas que coincidan con tu busqueda</p>
+                    <a href="/institution/deudas/crear" class="btn btn-primary">
+                        Crear primera deuda
+                    </a>
+                </div>
+            `;
         }
 
         function mostrarMensaje(mensaje, tipo = 'error') {
@@ -846,9 +1031,9 @@
 
             const icon = tipo === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle';
             alert.innerHTML = `
-                                        <i class="fas ${icon}"></i>
-                                        <span>${mensaje}</span>
-                                    `;
+                <i class="fas ${icon}"></i>
+                <span>${mensaje}</span>
+            `;
 
             container.appendChild(alert);
 
@@ -860,7 +1045,7 @@
         function formatDate(dateString) {
             if (!dateString) return 'N/A';
             const date = new Date(dateString);
-            return date.toLocaleDateString('es-CO', {
+            return date.toLocaleDateString('es-MX', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'

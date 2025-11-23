@@ -581,12 +581,18 @@
                 let estado = '';
                 const fechaVencimientoObj = new Date(deuda.fecha_vencimiento);
 
-                if (deuda.estado === 'Pagada') {
-                    estado = '<span class="badge badge-pagado">Pagada</span>';
-                } else if (fechaVencimientoObj < new Date()) {
-                    estado = '<span class="badge badge-vencido">Vencida</span>';
+                if (estado.toLowerCase() === 'pagada') {
+                    return '<span class="badge badge-pagada">Pagada</span>';
+                }
+                
+                // Comparar solo las fechas en formato YYYY-MM-DD
+                const hoy = new Date().toISOString().split('T')[0];
+                const fecha = new Date(fechaVencimiento).toISOString().split('T')[0];
+                
+                if (fecha < hoy) {
+                    return '<span class="badge badge-vencido">Vencida</span>';
                 } else {
-                    estado = '<span class="badge badge-pendiente">Pendiente</span>';
+                    return '<span class="badge badge-pendiente">Pendiente</span>';
                 }
 
                 html += `
