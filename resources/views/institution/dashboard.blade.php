@@ -469,6 +469,17 @@
                     </div>
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
+
+                <a href="/institution/notificaciones" class="action-card">
+                    <div class="action-icon">
+                        <i class="fas fa-paper-plane"></i>
+                    </div>
+                    <div class="action-content">
+                        <h3>Notificaciones enviadas</h3>
+                        <p>Consulta el historial de mensajes enviados</p>
+                    </div>
+                    <i class="fas fa-chevron-right action-arrow"></i>
+                </a>
             </div>
         </div>
 

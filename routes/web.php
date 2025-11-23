@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\InstitutionController;
 use App\Http\Controllers\Api\DebtNotificationController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Web\LoginController;
@@ -23,6 +24,8 @@ Route::middleware([\App\Http\Middleware\AuthToken::class])->group(function () {
 
     // ========= ADMIN =========
     Route::get('admin/dashboard', [AdminDashboardController::class, 'index'])->name('admin.dashboard');
+    Route::get('admin/institutions', [InstitutionController::class, 'index'])->name('admin.institutions.index');
+    Route::get('admin/institutions/create', [InstitutionController::class, 'create'])->name('admin.institutions.create');
 
     // ========= INSTITUCIÓN =========
     Route::prefix('institution')->group(function () {
@@ -37,5 +40,7 @@ Route::middleware([\App\Http\Middleware\AuthToken::class])->group(function () {
         // Deudas
         Route::get('deudas', [InstitutionDashboardController::class, 'deudas'])->name('institution.deudas.index');
         Route::get('deudas/crear', [InstitutionDashboardController::class, 'crearDeuda'])->name('institution.deudas.create');
+
+        Route::get('notificaciones', [InstitutionDashboardController::class, 'notificaciones'])->name('institution.notificaciones.index');
     });
 });

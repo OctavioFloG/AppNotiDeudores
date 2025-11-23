@@ -65,10 +65,9 @@ class NotificacionController extends Controller
                 'message' => 'Notificación ' . ($enviada ? 'enviada' : 'guardada (no enviada)'),
                 'data' => $notificacion
             ]);
-
         } catch (\Exception $e) {
             Log::error('Error al enviar notificación: ' . $e->getMessage());
-            
+
             return response()->json([
                 'success' => false,
                 'message' => 'Error al procesar la notificación',
@@ -198,15 +197,25 @@ class NotificacionController extends Controller
     /**
      * Listar todas las notificaciones
      */
-    public function listar()
+    public function listar(Request $request)
     {
-        $notificaciones = Notificacion::with(['cuentaPorCobrar', 'institucion'])
-            ->latest()
-            ->paginate(50);
+        $institucionId = $request->user()->id_institucion;
+        $notificaciones = Notificacion::with('cliente')
+            ->where('id_institucion', $institucionId)
+            ->orderBy('fecha_envio', 'desc')
+            ->get();
 
         return response()->json([
             'success' => true,
-            'data' => $notificaciones
+            'data' => $notificaciones->map(function ($n) {
+                return [
+                    'fecha' => $n->fecha_envio,
+                    'cliente' => $n->cliente->nombre,
+                    'tipo' => $n->tipo,
+                    'estado' => $n->estado,
+                    'mensaje' => $n->mensaje,
+                ];
+            })
         ]);
     }
 

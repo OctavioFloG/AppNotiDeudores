@@ -676,16 +676,7 @@
                     <i class="fas fa-chevron-right action-arrow"></i>
                 </a>
 
-                <a href="#" class="action-card">
-                    <div class="action-icon">
-                        <i class="fas fa-file-invoice-dollar"></i>
-                    </div>
-                    <div class="action-content">
-                        <h3>Nueva Deuda</h3>
-                        <p>Registrar una nueva cuenta por cobrar</p>
-                    </div>
-                    <i class="fas fa-chevron-right action-arrow"></i>
-                </a>
+                
             </div>
         </div>
 
