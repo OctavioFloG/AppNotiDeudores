@@ -120,4 +120,9 @@ class InstitutionDashboardController extends Controller
     {
         return view('institution.deudas.index');
     }
+
+    public function notificaciones()
+    {
+        return view('institution.notificaciones');
+    }
 }

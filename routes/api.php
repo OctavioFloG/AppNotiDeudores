@@ -64,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::delete('institution/deudas/{id}', [CuentaPorCobrarController::class, 'destroy']);
     Route::put('institution/deudas/{id}/pagar', [CuentaPorCobrarController::class, 'registrarPago']);
 
+    // routes/api.php
+    Route::get('institution/notificaciones', [NotificacionController::class, 'listar']);
 
     // ========= NOTIFICACIONES =========
     Route::post('notificaciones/enviar', [NotificacionController::class, 'enviar']);
