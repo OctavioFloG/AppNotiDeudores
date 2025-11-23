@@ -131,10 +131,48 @@
             margin-top: 8px;
         }
 
-        .stat-card.success { border-left-color: #10b981; }
-        .stat-card.warning { border-left-color: #f59e0b; }
-        .stat-card.danger { border-left-color: #ef4444; }
-        .stat-card.info { border-left-color: #3b82f6; }
+        /* ✅ Colores por tipo */
+        .stat-card.success { 
+            border-left-color: #10b981; 
+        }
+        .stat-card.success .stat-card-icon { 
+            color: #10b981; 
+        }
+
+        .stat-card.warning { 
+            border-left-color: #f59e0b; 
+        }
+        .stat-card.warning .stat-card-icon { 
+            color: #f59e0b; 
+        }
+
+        .stat-card.danger { 
+            border-left-color: #ef4444; 
+        }
+        .stat-card.danger .stat-card-icon { 
+            color: #ef4444; 
+        }
+
+        .stat-card.info { 
+            border-left-color: #3b82f6; 
+        }
+        .stat-card.info .stat-card-icon { 
+            color: #3b82f6; 
+        }
+
+        .stat-card.primary { 
+            border-left-color: #8b5cf6; 
+        }
+        .stat-card.primary .stat-card-icon { 
+            color: #8b5cf6; 
+        }
+
+        .stat-card.secondary { 
+            border-left-color: #06b6d4; 
+        }
+        .stat-card.secondary .stat-card-icon { 
+            color: #06b6d4; 
+        }
 
         /* Quick Actions */
         .quick-actions {
@@ -436,6 +474,13 @@
             font-size: 14px;
         }
 
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .stats-grid {
+                grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            }
+        }
+
         @media (max-width: 768px) {
             .header-content {
                 flex-direction: column;
@@ -446,6 +491,7 @@
             .header-right {
                 width: 100%;
                 justify-content: center;
+                flex-direction: column;
             }
 
             .user-info {
@@ -457,7 +503,8 @@
             }
 
             .stats-grid {
-                grid-template-columns: 1fr;
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
             }
 
             .quick-actions {
@@ -467,10 +514,54 @@
             .section-header {
                 flex-direction: column;
                 text-align: center;
+                gap: 15px;
+            }
+
+            .stat-card {
+                padding: 20px;
+            }
+
+            .stat-card-value {
+                font-size: 24px;
             }
 
             th, td {
                 padding: 8px 12px;
+                font-size: 12px;
+            }
+
+            .dashboard-header {
+                padding: 20px;
+            }
+
+            .header-left h1 {
+                font-size: 22px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+
+            .stat-card {
+                padding: 15px;
+            }
+
+            .stat-card-icon {
+                font-size: 24px;
+            }
+
+            .stat-card-value {
+                font-size: 20px;
+            }
+
+            .header-left h1 {
+                font-size: 18px;
+            }
+
+            .header-left p {
                 font-size: 12px;
             }
         }
@@ -507,6 +598,7 @@
 
         <!-- Estadísticas -->
         <div class="stats-grid" id="statsGrid" style="display: none;">
+            <!-- Instituciones -->
             <div class="stat-card success">
                 <div class="stat-card-icon"><i class="fas fa-building"></i></div>
                 <div class="stat-card-label">Instituciones</div>
@@ -514,25 +606,44 @@
                 <div class="stat-card-meta">Instituciones activas</div>
             </div>
 
+            <!-- Clientes/Usuarios -->
             <div class="stat-card info">
                 <div class="stat-card-icon"><i class="fas fa-users"></i></div>
-                <div class="stat-card-label">Usuarios</div>
+                <div class="stat-card-label">Clientes</div>
                 <p class="stat-card-value" id="userCount">0</p>
-                <div class="stat-card-meta">Usuarios del sistema</div>
+                <div class="stat-card-meta">Clientes en el sistema</div>
             </div>
 
+            <!-- Deudas Activas -->
             <div class="stat-card warning">
                 <div class="stat-card-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-                <div class="stat-card-label">Cuentas por Cobrar</div>
+                <div class="stat-card-label">Deudas Activas</div>
                 <p class="stat-card-value" id="debtCount">0</p>
                 <div class="stat-card-meta">Deudas registradas</div>
             </div>
 
+            <!-- Notificaciones Enviadas -->
+            <div class="stat-card primary">
+                <div class="stat-card-icon"><i class="fas fa-bell"></i></div>
+                <div class="stat-card-label">Notificaciones</div>
+                <p class="stat-card-value" id="notificationCount">0</p>
+                <div class="stat-card-meta">Notificaciones enviadas</div>
+            </div>
+
+            <!-- Deudas Vencidas -->
             <div class="stat-card danger">
                 <div class="stat-card-icon"><i class="fas fa-exclamation-triangle"></i></div>
                 <div class="stat-card-label">Vencidas</div>
                 <p class="stat-card-value" id="overdueCount">0</p>
                 <div class="stat-card-meta">Deudas vencidas</div>
+            </div>
+
+            <!-- Monto Total -->
+            <div class="stat-card secondary">
+                <div class="stat-card-icon"><i class="fas fa-dollar-sign"></i></div>
+                <div class="stat-card-label">Monto Total</div>
+                <p class="stat-card-value" id="totalDebtAmount">$0.00</p>
+                <div class="stat-card-meta">Deudas por cobrar</div>
             </div>
         </div>
 
@@ -643,10 +754,21 @@
 
         function actualizarEstadisticas(stats) {
             document.getElementById('statsGrid').style.display = 'grid';
-            document.getElementById('institutionCount').textContent = stats.institutions || 0;
-            document.getElementById('userCount').textContent = stats.users || 0;
-            document.getElementById('debtCount').textContent = stats.debts || 0;
-            document.getElementById('overdueCount').textContent = stats.overdue || 0;
+            
+            document.getElementById('institutionCount').textContent = stats.total_institutions || 0;
+            document.getElementById('userCount').textContent = stats.total_clients || 0;
+            document.getElementById('debtCount').textContent = stats.active_debts || 0;
+            document.getElementById('overdueCount').textContent = stats.overdue_debts || 0;
+            
+            const notifElement = document.getElementById('notificationCount');
+            if (notifElement) {
+                notifElement.textContent = stats.notifications_sent || 0;
+            }
+            
+            const debtAmountElement = document.getElementById('totalDebtAmount');
+            if (debtAmountElement) {
+                debtAmountElement.textContent = '$' + parseFloat(stats.total_debt_amount || 0).toLocaleString('es-MX', { minimumFractionDigits: 2 });
+            }
         }
 
         function mostrarDeudas(deudas) {
