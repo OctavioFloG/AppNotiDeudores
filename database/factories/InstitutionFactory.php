@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Institution;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class InstitutionFactory extends Factory
 {
+    protected $model = Institution::class;
     /**
      * Define the model's default state.
      *
@@ -17,7 +19,10 @@ class InstitutionFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'nombre' => $this->faker->company,
+            'direccion' => $this->faker->address,
+            'telefono' => $this->faker->phoneNumber,
+            'correo' => $this->faker->unique()->safeEmail,
         ];
     }
 }
