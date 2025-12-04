@@ -576,35 +576,18 @@
                 const fechaEmision = formatDate(deuda.fecha_emision);
                 const fechaVencimiento = formatDate(deuda.fecha_vencimiento);
                 const fechaPago = deuda.fecha_pago ? formatDate(deuda.fecha_pago) : '-';
-
-                // Determinar estado
-                let estado = '';
-                const fechaVencimientoObj = new Date(deuda.fecha_vencimiento);
-
-                if (estado.toLowerCase() === 'pagada') {
-                    return '<span class="badge badge-pagada">Pagada</span>';
-                }
-                
-                // Comparar solo las fechas en formato YYYY-MM-DD
-                const hoy = new Date().toISOString().split('T')[0];
-                const fecha = new Date(fechaVencimiento).toISOString().split('T')[0];
-                
-                if (fecha < hoy) {
-                    return '<span class="badge badge-vencido">Vencida</span>';
-                } else {
-                    return '<span class="badge badge-pendiente">Pendiente</span>';
-                }
+                const estadoBadge = getEstadoBadge(deuda.estado, deuda.fecha_vencimiento);
 
                 html += `
-                        <tr>
-                            <td>${deuda.descripcion}</td>
-                            <td><span class="monto">$${monto}</span></td>
-                            <td>${fechaEmision}</td>
-                            <td>${fechaVencimiento}</td>
-                            <td>${estado}</td>
-                            <td>${fechaPago}</td>
-                        </tr>
-                    `;
+                    <tr>
+                        <td>${deuda.descripcion}</td>
+                        <td><span class="monto">$${monto}</span></td>
+                        <td>${fechaEmision}</td>
+                        <td>${fechaVencimiento}</td>
+                        <td>${estadoBadge}</td>
+                        <td>${fechaPago}</td>
+                    </tr>
+                `;
             });
 
             html += `
@@ -616,14 +599,42 @@
             document.getElementById('deudasContainer').innerHTML = html;
         }
 
+        function getEstadoBadge(estadoOriginal, fechaVencimientoRaw) {
+            const estado = (estadoOriginal || '').toLowerCase();
+
+            if (estado === 'pagada') {
+                return '<span class="badge badge-pagada">Pagada</span>';
+            }
+
+            if (!fechaVencimientoRaw) {
+                return '<span class="badge badge-pendiente">Pendiente</span>';
+            }
+
+            const d = new Date(fechaVencimientoRaw);
+            if (isNaN(d.getTime())) {
+                return '<span class="badge badge-pendiente">Pendiente</span>';
+            }
+
+            const hoy = new Date();
+            hoy.setHours(0,0,0,0);
+            d.setHours(0,0,0,0);
+
+            if (d < hoy) {
+                return '<span class="badge badge-vencido">Vencida</span>';
+            }
+            return '<span class="badge badge-pendiente">Pendiente</span>';
+        }
+
         function formatDate(dateString) {
             if (!dateString) return '-';
-            const date = new Date(dateString);
-            return date.toLocaleDateString('es-CO', {
+            const d = new Date(dateString);
+            if (isNaN(d.getTime())) return '-';
+            return d.toLocaleDateString('es-CO', {
                 year: 'numeric',
                 month: 'short',
                 day: 'numeric'
             });
         }
+
     </script>
 @endsection

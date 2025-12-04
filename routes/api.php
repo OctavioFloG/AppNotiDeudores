@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\NotificacionController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Web\AdminDashboardController;
 use App\Http\Controllers\Web\InstitutionDashboardController;
+use App\Http\Controllers\Api\ClientImportController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -48,6 +49,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('institution/clientes/{id_cliente}', [ClientController::class, 'show']);
     Route::put('institution/clientes/{id_cliente}', [ClientController::class, 'update']);
     Route::delete('institution/clientes/{id_cliente}', [ClientController::class, 'destroy']);
+    Route::post('institution/clientes/import', [ClientImportController::class, 'import']);
     Route::get('institution/reporte-deudores', [ReportController::class, 'reporteDeudores']);
     Route::get('institution/reporte-deudores/exportar-csv', [ReportController::class, 'exportarCSV']);
 
